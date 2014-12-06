@@ -30,7 +30,8 @@ LOG = logging.getLogger(__name__)
 class BrocadeAdxDeviceDriverV1():
     def __init__(self, plugin):
         self.plugin = plugin
-        self.device_inv_mgr = (device_inventory.AdxLoadBalancerManager(self))
+        self.device_inv_mgr = (device_inventory
+                               .BrocadeAdxDeviceInventoryManager(self))
 
     def _get_pool(self, pool_id):
         return self.plugin.get_pool(get_admin_context(), pool_id)
