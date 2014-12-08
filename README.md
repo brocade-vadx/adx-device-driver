@@ -4,10 +4,15 @@ The device driver manages the adx device inventory at the specified database loc
 It has client libraries to add, delete, update, and list devices along with its associated ports
 
 1.Download the code
+
 2.run "python setup.py install
+
 3.pip install configparser
+
 4.copy the device_inventory.ini to /etc/neutron/services/loadbalancer/brocade
+
 5.Modify the ini file to point to the database to which the device driver will connect to.
+
 
 Client Library usage
 ==========================
@@ -47,6 +52,7 @@ subcommands:
     port         Create Port for ADX Device
 
 
+
 python brocade_lbaas_client.py create device --name dummy --management_ip 1.1.1.1 --status active --communication_type http --user admin --password brocade
 
 Create Device - dummy
@@ -84,6 +90,7 @@ Device dummy created successfully
     "id": "e38e95d2-3871-40a0-9bde-cb59a0e184f4",
     "ports": []
 }
+
 
 
 python brocade_lbaas_client.py list devices
@@ -170,6 +177,7 @@ Number of Devices - 3
 }
 
 
+
 python brocade_lbaas_client.py create port --subnet_id ALL --adx_lb_id e38e95d2-3871-40a0-9bde-cb59a0e184f4
 
 
@@ -189,7 +197,9 @@ Port 54952d95-4b42-4d5b-93c1-3fff93b04eb1 created successfully
 }
 
 
+
 python brocade_lbaas_client.py delete port --id 54952d95-4b42-4d5b-93c1-3fff93b04eb1
+
 Delete Port - 54952d95-4b42-4d5b-93c1-3fff93b04eb1
 Port 54952d95-4b42-4d5b-93c1-3fff93b04eb1 deleted successfully
 
