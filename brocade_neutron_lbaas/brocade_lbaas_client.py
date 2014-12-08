@@ -79,7 +79,7 @@ def delete_port(port_args):
     except Exception as e:
         print "Failed to delete port "
         print e.message
-    print "Device " + port_args['id'] + " deleted successfully"
+    print "Port " + port_args['id'] + " deleted successfully"
 
 
 def update_device(device_args):
