@@ -15,13 +15,10 @@
 #    under the License.
 #
 
-from neutron.openstack.common import log as logging
 from brocade_neutron_lbaas.db import db_utils as utils, uuidutils
 from brocade_neutron_lbaas.db.brocade_db_base import BrocadeAdxLoadBalancer
 from brocade_neutron_lbaas.db.brocade_db_base import BrocadeAdxPort
 import json
-
-LOG = logging.getLogger(__name__)
 
 def _format_date_time(date):
     if(date!=None):

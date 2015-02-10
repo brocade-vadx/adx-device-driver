@@ -11,7 +11,7 @@ It also has client libraries to add, delete, update, and list devices along with
 
 - Copy device_inventory.ini file to "/etc/neutron/services/loadbalancer/brocade" directory
 
-- Modify the device_inventory.ini file to point to the database to which the device driver will connect to.
+- Modify the device_inventory.ini file to point to the database for the device inventory DB tables.
 
 
 Client Library Usage
@@ -19,7 +19,12 @@ Client Library Usage
 
 Client Library/Program is needed to explictly add/delete vADX/ADX devices and
 ports to the device inventory. The device driver selects the device from the 
-device inventory based on the subnet_id speciffied in the request.
+device inventory based on "subnet_id" specified in the request.
+
+Usage of Client Library is optional. User can run the Brocade ADX Inventory Listener
+Service to automatically update the device inventory. 
+Please refer to https://github.com/brocade-vadx/brocade_adx_inventory_listener for details
+on the Brocade ADX Inventory Listener.
 
 python brocade_lbaas_client.py -h
 usage: brocade_lbaas_client.py [-h]
