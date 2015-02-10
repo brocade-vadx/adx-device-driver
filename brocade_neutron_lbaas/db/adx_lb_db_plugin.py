@@ -1,10 +1,28 @@
+# vim: tabstop=4 shiftwidth=4 softtabstop=4
+#
+# Copyright 2014 Brocade Communications Systems, Inc.  All rights reserved.
+#
+#    Licensed under the Apache License, Version 2.0 (the "License"); you may
+#    not use this file except in compliance with the License. You may obtain
+#    a copy of the License at
+#
+#         http://www.apache.org/licenses/LICENSE-2.0
+#
+#    Unless required by applicable law or agreed to in writing, software
+#    distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+#    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+#    License for the specific language governing permissions and limitations
+#    under the License.
+#
+
+from neutron.openstack.common import log as logging
 from brocade_neutron_lbaas.db import db_utils as utils, uuidutils
-
-__author__ = 'root'
-
-from brocade_neutron_lbaas.db.brocade_db_base import AdxLoadBalancer
-from brocade_neutron_lbaas.db.brocade_db_base import Port
+from brocade_neutron_lbaas.db.brocade_db_base import BrocadeAdxLoadBalancer
+from brocade_neutron_lbaas.db.brocade_db_base import BrocadeAdxPort
 import json
+
+LOG = logging.getLogger(__name__)
+
 def _format_date_time(date):
     if(date!=None):
         return json.dumps(date.strftime("%Y-%m-%d %H:%M:%S"))
@@ -41,7 +59,6 @@ class AdxLoadBalancerDbPlugin():
         res={'id':port['id'],
             'subnet_id':port['subnet_id'],
             'adx_lb_id':port['adx_lb_id'],
-            'status':port['status'],
             'mac':port['mac'],
             'ip_address':port['ip_address'],
             'network_id':port['network_id']}
@@ -56,7 +73,7 @@ class AdxLoadBalancerDbPlugin():
         with context.session.begin(subtransactions=True):
             device_db=None
             try:
-                device_db = AdxLoadBalancer(id=uuidutils.generate_uuid())
+                device_db = BrocadeAdxLoadBalancer(id=uuidutils.generate_uuid())
                 self.set_obj_attr(device_db,d)
                 context.session.add(device_db)
                 context.session.flush()
@@ -67,7 +84,7 @@ class AdxLoadBalancerDbPlugin():
 
     def create_port(self,d,context):
         with context.session.begin(subtransactions=True):
-            port_db = Port(id=uuidutils.generate_uuid())
+            port_db = BrocadeAdxPort(id=uuidutils.generate_uuid())
             self.set_obj_attr(port_db,d)
             context.session.add(port_db)
             context.session.flush()
@@ -77,7 +94,9 @@ class AdxLoadBalancerDbPlugin():
 
     def delete_port(self,port_id,context):
         with context.session.begin(subtransactions=True):
-            port_db=utils._get_resource(context,Port,port_id)
+            port_db=utils._get_resource(context,
+                                        BrocadeAdxPort,
+                                        port_id)
             context.session.delete(port_db)
         port_info =self._make_port_dict(port_db)
         return port_info
@@ -85,7 +104,8 @@ class AdxLoadBalancerDbPlugin():
 
     def update_adxloadbalancer(self, d,context):
         with context.session.begin(subtransactions=True):
-            device_db = utils._get_resource(context, AdxLoadBalancer,d['id'])
+            device_db = utils._get_resource(context,
+                                            BrocadeAdxLoadBalancer,d['id'])
             self.set_obj_attr(device_db,d)
             context.session.merge(device_db)
             context.session.flush()
@@ -96,7 +116,9 @@ class AdxLoadBalancerDbPlugin():
     def delete_adxloadbalancer(self, device_id,context):
         device_info = None
         with context.session.begin(subtransactions=True):
-            device_db = utils._get_resource(context, AdxLoadBalancer, device_id)
+            device_db = utils._get_resource(context,
+                                            BrocadeAdxLoadBalancer,
+                                            device_id)
             device_info =  self._make_device_dict(device_db)
             context.session.delete(device_db)
         device_info=self._make_device_dict(device_db)
@@ -104,12 +126,22 @@ class AdxLoadBalancerDbPlugin():
 
 
     def get_port(self,context,filters=None,fields=None):
-        return utils._get_collection(context,Port,self._make_port_dict,filters=filters,fields=fields,limit=None,offset=0,joins=None)
+        return utils._get_collection(context,
+                                     BrocadeAdxPort,
+                                     self._make_port_dict,
+                                     filters=filters,
+                                     fields=fields,
+                                     limit=None,
+                                     offset=0,
+                                     joins=None)
 
 
     def get_adxloadbalancer(self,context, filters=None, fields=None):
-        joins=[Port]
-        return utils._get_collection(context, AdxLoadBalancer,
-                                    self._make_device_dict,
-                                    filters=filters, fields=fields,limit=None,offset=0,joins=joins)
-
+        joins=[BrocadeAdxPort]
+        return utils._get_collection(context,
+                                     BrocadeAdxLoadBalancer,
+                                     self._make_device_dict,
+                                     filters=filters,
+                                     fields=fields,
+                                     limit=None,
+                                     offset=0,joins=joins)

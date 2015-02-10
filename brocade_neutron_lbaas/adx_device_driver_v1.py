@@ -50,18 +50,18 @@ class BrocadeAdxDeviceDriverV1():
 
     def _get_device(self, subnet_id):
         devices = self.device_inv_mgr.get_device(subnet_id)
-        if len(devices) == 0:
+        if devices and len(devices) == 0:
             raise device_inventory.NoValidDevice()
 
         # filter by subnet_id
-        filtered = [device for device in devices
-                   if 'active' in device['status'] ]
+        #filtered = [device for device in devices
+        #           if 'active' in device['status'] ]
 
-        if not filtered:
-            LOG.error(_('No active device was found for subnet: %s'), subnet_id)
-            raise device_inventory.NoValidDevice()
+        #if not filtered:
+        #    LOG.error(_('No active device was found for subnet: %s'), subnet_id)
+        #    raise device_inventory.NoValidDevice()
 
-        device =filtered[0]
+        device = devices[0]
         return device
 
     def _fetch_device(self, pool_id):
@@ -154,17 +154,17 @@ class BrocadeAdxDeviceDriverV1():
 
         pool_id = obj['id']
 
-        # Retrieve health monitors
-        # Delete health monitors
-        hms = self._get_health_monitors(pool_id)
-        for hm in hms:
-            impl.delete_health_monitor(hm, pool_id)
-
         # Retrieve pool members
         # Delete members
         members = self._get_pool_members(pool_id)
         for member in members:
             impl.delete_member(member)
+
+        # Retrieve health monitors
+        # Delete health monitors
+        hms = self._get_health_monitors(pool_id)
+        for hm in hms:
+            impl.delete_health_monitor(hm)
 
 
     @log.log
@@ -224,6 +224,7 @@ class BrocadeAdxDeviceDriverV1():
                 new_vip = self._get_vip(new_vip_id)
                 impl.bind_member_to_vip(obj, new_vip)
 
+
     @log.log
     def delete_member(self, obj):
         device = self._fetch_device(obj['pool_id'])
@@ -255,13 +256,13 @@ class BrocadeAdxDeviceDriverV1():
         for member in members:
             impl.unbind_monitor_from_member(obj, member)
 
-        impl.delete_health_monitor(obj, pool_id)
+        impl.delete_health_monitor(obj)
 
     @log.log
     def update_health_monitor(self, obj, old_obj, pool_id):
         device = self._fetch_device(pool_id)
         impl = driver_impl.BrocadeAdxDeviceDriverImplV1(self.plugin, device)
-        impl.update_health_monitor(obj, old_obj, pool_id)
+        impl.update_health_monitor(obj, old_obj)
 
     @log.log
     def get_pool_stats(self, pool_id):

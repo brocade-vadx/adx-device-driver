@@ -18,6 +18,7 @@
 #
 
 import suds as suds
+import time
 
 from neutron.common import log
 from neutron.context import get_admin_context
@@ -202,6 +203,9 @@ class BrocadeAdxDeviceDriverImplV1():
 
             (self.slb_service
              .unbindRealServerPortFromVipPort(vsServerPort, rsServerPort))
+            # Need to check alternate solutions rather than sleep
+            # Is 5 seconds good enough ?
+            time.sleep(5)
         except suds.WebFault as e:
             raise adx_exception.ConfigError(msg=e.message)
 
@@ -234,6 +238,7 @@ class BrocadeAdxDeviceDriverImplV1():
         except suds.WebFault as e:
             raise adx_exception.ConfigError(msg=e.message)
 
+    @log.log
     def unbind_monitor_from_member(self, healthmonitor, member):
 
         rsIpAddress = member['address']
@@ -282,6 +287,43 @@ class BrocadeAdxDeviceDriverImplV1():
             (self.slb_service
              .setPredictorOnVirtualServer(server,
                                           predictorMethodConfiguration))
+        except suds.WebFault as e:
+            raise adx_exception.ConfigError(msg=e.message)
+
+    @log.log
+    def _update_virtual_server_properties(self, new_vip, old_vip):
+        try:
+            address = new_vip['address']
+            new_description = new_vip.get('description')
+            old_description = old_vip.get('description')
+
+            if new_description == old_description:
+                return
+
+            vsServer = self._adx_server(address)
+            reply = (self.slb_service
+                     .getVirtualServerConfiguration(vsServer))
+            LOG.debug(_("VS Configuration %s", reply))
+
+            vsConfSeq = (self.slb_factory.create
+                         ("ArrayOfVirtualServerConfigurationSequence"))
+            if new_description:
+                reply.vipConfig.description = new_description
+
+            # Workaround for the XML API Issues
+            if reply.vipConfig.stickyAge == 0:
+                reply.vipConfig.stickyAge = None
+            if reply.vipConfig.tcpAge == 0:
+                reply.vipConfig.tcpAge = None
+            if reply.vipConfig.udpAge == 0:
+                reply.vipConfig.udpAge = None
+
+            vsConfList = []
+            vsConfList.append(reply.vipConfig)
+            vsConfSeq.VirtualServerConfigurationSequence = vsConfList
+
+            (self.slb_service
+             .setVirtualServersConfiguration(vsConfSeq))
         except suds.WebFault as e:
             raise adx_exception.ConfigError(msg=e.message)
 
@@ -384,6 +426,8 @@ class BrocadeAdxDeviceDriverImplV1():
         vsPort = new_vip['protocol_port']
         vsName = new_vip['name']
         vsServerPort = self._adx_server_port(vsIpAddress, vsPort, vsName)
+
+        self._update_virtual_server_properties(new_vip, old_vip)
 
         old_admin_state_up = old_vip.get('admin_state_up')
         new_admin_state_up = new_vip.get('admin_state_up')
@@ -492,21 +536,14 @@ class BrocadeAdxDeviceDriverImplV1():
                             constants.HEALTH_MONITOR_HTTPS,
                             constants.HEALTH_MONITOR_TCP]:
             portPolicy = self.slb_factory.create('PortPolicy')
-            l4Port = self.slb_factory.create('L4Port')
 
             if monitor_type == constants.HEALTH_MONITOR_HTTP:
                 portPolicy.name = name
-                l4Port.NameOrNumber = (ADX_PROTOCOL_MAP
-                                       .get(constants.PROTOCOL_HTTP))
-                portPolicy.port = l4Port
                 portPolicy.protocol = (ADX_PROTOCOL_MAP
                                        .get(constants.PROTOCOL_HTTP))
                 portPolicy.l4Check = False
             elif monitor_type == constants.HEALTH_MONITOR_HTTPS:
                 portPolicy.name = name
-                l4Port.NameOrNumber = (ADX_PROTOCOL_MAP
-                                       .get(constants.PROTOCOL_HTTPS))
-                portPolicy.port = l4Port
                 portPolicy.protocol = (ADX_PROTOCOL_MAP
                                        .get(constants.PROTOCOL_HTTPS))
                 portPolicy.l4Check = False
@@ -517,9 +554,6 @@ class BrocadeAdxDeviceDriverImplV1():
 
                 # Setting Protocol and Port to HTTP
                 # so that this can be bound to a Real Server Port
-                l4Port.NameOrNumber = (ADX_PROTOCOL_MAP
-                                       .get(constants.PROTOCOL_HTTP))
-                portPolicy.port = l4Port
                 portPolicy.protocol = (ADX_PROTOCOL_MAP
                                        .get(constants.PROTOCOL_HTTP))
 
@@ -639,7 +673,7 @@ class BrocadeAdxDeviceDriverImplV1():
             raise adx_exception.UnsupportedFeature(msg=m)
 
     @log.log
-    def delete_health_monitor(self, healthmonitor, pool_id):
+    def delete_health_monitor(self, healthmonitor):
         name = healthmonitor['id']
         monitor_type = healthmonitor['type']
 
@@ -663,7 +697,7 @@ class BrocadeAdxDeviceDriverImplV1():
             raise adx_exception.UnsupportedFeature(msg=m)
 
     @log.log
-    def update_health_monitor(self, new_hm, old_hm, pool_id):
+    def update_health_monitor(self, new_hm, old_hm):
         monitor_type = new_hm['type']
 
         # Create Port Policy

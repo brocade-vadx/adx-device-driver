@@ -23,7 +23,7 @@ from oslo.config import cfg
 from neutron.openstack.common import log as logging
 from neutron.common import exceptions as q_exc
 import adx_service
-import configparser
+import ConfigParser
 from db.db_base import configure_db
 from db.adx_lb_db_plugin import AdxLoadBalancerDbPlugin
 from neutron.openstack.common import log as logging
@@ -45,7 +45,7 @@ class AdxLoadBalancerManager(object):
     def __init__(self, device_driver):
         self.device_driver = device_driver
         self.devices_file_name = cfg.CONF.brocade.devices_file_name
-        config=configparser.ConfigParser()
+        config=configParser.ConfigParser()
         config.read(self.devices_file_name)
         self.dburl=config.get('DEFAULT','db_url')
         if self.dburl==None:
@@ -56,12 +56,11 @@ class AdxLoadBalancerManager(object):
         self.db_plugin= AdxLoadBalancerDbPlugin()
 
     def get_device(self,subnet_id):
-        filters={'Port.subnet_id':subnet_id}
+        filters={'BrocadeAdxPort.subnet_id':subnet_id}
         adx= self.db_plugin.get_adxloadbalancer(self.context,filters)
         if len(adx)==0:
-            filters={'Port.subnet_id':'ALL'}
+            filters={'BrocadeAdxPort.subnet_id':'ALL'}
             adx=self.db_plugin.get_adxloadbalancer(self.context,filters)
-        #returns a list of devices that match
         return adx
 
     def add_device(self,device_dict):

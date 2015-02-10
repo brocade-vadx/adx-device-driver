@@ -122,13 +122,13 @@ class JsonType(TypeDecorator):
         return {}
 
 
-class ADXGroup(BASEV2,HasId):
+class BrocadeAdxGroup(BASEV2,HasId):
     name = sa.Column(sa.String(256),nullable=False)
-    devices=orm.relationship("AdxLoadBalancer",backref="adxgroups",cascade="all")
+    devices=orm.relationship("BrocadeAdxLoadBalancer",backref="brocadeadxgroups",cascade="all")
 
 
-class AdxLoadBalancer(BASEV2, HasId, HasTenant):
-    """ Represents loadbalancing device
+class BrocadeAdxLoadBalancer(BASEV2, HasId, HasTenant):
+    """ Represents Brocade ADX loadbalancer device
     """
     name = sa.Column(sa.String(36))
     version = sa.Column(sa.String(36))
@@ -145,16 +145,15 @@ class AdxLoadBalancer(BASEV2, HasId, HasTenant):
     last_updated_time = sa.Column(sa.DateTime)
     deleted_at=sa.Column(sa.DateTime)
     ports = orm.relationship(
-        "Port", backref="adxloadbalancers",
+        "BrocadeAdxPort", backref="brocadeadxloadbalancers",
         cascade="all, delete-orphan"
     )
-    adx_group_id=sa.Column(sa.String(36),sa.ForeignKey("adxgroups.id"))
+    adx_group_id=sa.Column(sa.String(36),sa.ForeignKey("brocadeadxgroups.id"))
 
-class Port(BASEV2,HasId):
+class BrocadeAdxPort(BASEV2,HasId):
 
     subnet_id = sa.Column(sa.String(36), nullable=False)
-    adx_lb_id = sa.Column(sa.String(36), sa.ForeignKey("adxloadbalancers.id"), nullable=False)
-    status=sa.Column(sa.String(36))
+    adx_lb_id = sa.Column(sa.String(36), sa.ForeignKey("brocadeadxloadbalancers.id"), nullable=False)
     mac=sa.Column(sa.String(36))
     ip_address=sa.Column(sa.String(36))
     network_id=sa.Column(sa.String(36))

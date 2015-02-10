@@ -52,7 +52,6 @@ def get_session_with_url(autocommit=True, expire_on_commit=False,db_url=None):
     return _MAKER()
 
 def register_models(BASEV2):
-    print "Register Models"
     global _ENGINE
     assert _ENGINE
     try:
@@ -72,7 +71,6 @@ def unregister_models(base=BASEV2):
   
   
 def configure_db(db_url):
-    print "Configure DB"
     global _ENGINE
   
     if db_url ==' ':
