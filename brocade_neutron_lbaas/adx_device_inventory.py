@@ -45,7 +45,7 @@ class AdxLoadBalancerManager(object):
     def __init__(self, device_driver):
         self.device_driver = device_driver
         self.devices_file_name = cfg.CONF.brocade.devices_file_name
-        config=configParser.ConfigParser()
+        config=ConfigParser.ConfigParser()
         config.read(self.devices_file_name)
         self.dburl=config.get('DEFAULT','db_url')
         if self.dburl==None:

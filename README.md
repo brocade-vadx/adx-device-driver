@@ -34,11 +34,12 @@ usage: brocade_lbaas_client.py [-h]
 Command Line Arguments of Device Inventory Client
 
 optional arguments:
+
   -h, --help            show this help message and exit
 
 subcommands:
 
-  Sub Commands
+    Sub Commands
 
   {create-device,delete-device,update-device,list-devices,add-port,delete-port,update-port,list-ports}
 
