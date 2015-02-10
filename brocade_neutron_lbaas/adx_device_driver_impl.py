@@ -46,7 +46,7 @@ ADX_PROTOCOL_MAP = {
 }
 
 
-class BrocadeAdxDeviceDriverImplV1():
+class BrocadeAdxDeviceDriverImpl():
     def __init__(self, plugin, device):
         self.plugin = plugin
         service_clients = (adx_service.ClientCache

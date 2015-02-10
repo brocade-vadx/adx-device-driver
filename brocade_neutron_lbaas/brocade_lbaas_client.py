@@ -20,15 +20,14 @@ import sys
         
 def create_device(device_args):
     print "Create Device - " + device_args["management_ip"]
-
     device = {"management_ip":device_args["management_ip"],
               "user":device_args["user"],
               "password":device_args["password"]}
 
     device["communication_type"] = device_args.get("communication_type", "HTTP")
+    device["status"] = device_args.get("status", "active")
     device["name"] = device_args.get("name")
     device["version"] = device_args.get("version")
-    device["status"] = device_args.get("status")
     device["status_description"] = device_args.get("status_description")
     device["additional_info"] = device_args.get("additional_info")
     device["ha_config_type"] = device_args.get("ha_config_type")
@@ -96,7 +95,7 @@ def delete_device(device_args):
     devices = plugin.get_adxloadbalancer(ctx, device_filter)
     
     if len(devices) == 0:
-        print "Invalid Device - " + device_args['management_ip']
+        print "Invalid Device - " + device_args['id']
     
     for device in devices:
         print json.dumps(device, indent = 4)
@@ -149,14 +148,14 @@ if __name__ == '__main__':
     device_parser_create.add_argument('--management_ip', dest='management_ip', required = True, help='Management IP Address of the device')
     device_parser_create.add_argument('--user', dest='user', required = True, help='User Name')
     device_parser_create.add_argument('--password', dest='password', required = True, help='Password')
-    device_parser_create.add_argument('--communication_type', dest='communication_type', required = False, help='HTTP/HTTPS. Default: HTTP')
+    device_parser_create.add_argument('--communication_type', dest='communication_type', required = False, default="HTTP", help='HTTP/HTTPS. Default: HTTP')
     device_parser_create.add_argument('--name', dest='name', required = False, help='Device Name')
     device_parser_create.add_argument('--version', dest='version', required = False, help='running image version of the adx')
     device_parser_create.add_argument('--tenant_id', dest='tenant_id', required = False, help='id of the tenant owning the device')
     device_parser_create.add_argument('--nova_instance_id', dest='nova_instance_id', required = False, help='nova instance id of the adx (if deployed in openstack)')
-    device_parser_create.add_argument('--status', dest='status', required = False, help='active, stopped, paused, suspended, error, inactive')
+    device_parser_create.add_argument('--status', dest='status', default="active", required = False, help='active, stopped, paused, suspended, error, inactive')
     device_parser_create.add_argument('--status_description', dest='status_description', required = False, help='status description')
-    device_parser_create.add_argument('--ha_config_type', dest='ha_config_type', required = False, help='Primary, Secondary')
+    device_parser_create.add_argument('--ha_config_type', dest='ha_config_type', default="PRIMARY", required = False, help='PRIMARY, SECONDARY')
     device_parser_create.add_argument('--additional_info', dest='additional_info', required = False, help='A string to store additional informaton about the device/status etc')
     device_parser_create.set_defaults(func=create_device)
 
