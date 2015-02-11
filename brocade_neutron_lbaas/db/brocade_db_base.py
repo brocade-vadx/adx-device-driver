@@ -15,8 +15,7 @@ from sqlalchemy import types
 from sqlalchemy.ext import declarative
 from sqlalchemy.orm import object_mapper
 from sqlalchemy.types import TypeDecorator
-
-from brocade_neutron_lbaas.db import uuidutils
+import uuid
 
 class ModelBase(object):
     """Base class for models."""
@@ -98,7 +97,7 @@ BASEV2 = declarative.declarative_base(cls=BrocadeBaseV2)
 
 # HasId
 class HasId(object):
-    id = sa.Column(sa.String(36),primary_key=True,default=uuidutils.generate_uuid)
+    id = sa.Column(sa.String(36),primary_key=True,default=str(uuid.uuid4()))
 
 class HasTenant(object):
     """Tenant mixin, add to subclasses that have a tenant."""

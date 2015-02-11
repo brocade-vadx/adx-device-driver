@@ -20,7 +20,7 @@ from db.adx_lb_db_plugin import  AdxLoadBalancerDbPlugin
 from db.context import Context
 import argparse
 import json
-import configparser
+import ConfigParser
 from db.db_base import configure_db
  
 
@@ -130,7 +130,7 @@ def main(argv=sys.argv[1:]):
     global plugin, ctx
 
     devices_file_name = unicode('/etc/neutron/services/loadbalancer/brocade/device_inventory.ini')
-    config=configparser.ConfigParser()
+    config=ConfigParser.ConfigParser()
     config.read(devices_file_name)
     dburl=config.get('DEFAULT','db_url')
     
