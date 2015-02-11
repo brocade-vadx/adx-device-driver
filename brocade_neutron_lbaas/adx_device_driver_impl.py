@@ -276,7 +276,9 @@ class BrocadeAdxDeviceDriverImpl():
              .append(realServerPortConfig))
             self.slb_service.setRealServersPortConfiguration(rsPortSeq)
         except suds.WebFault as e:
-            raise adx_exception.ConfigError(msg=e.message)
+            #raise adx_exception.ConfigError(msg=e.message)
+            # ignore the exception until the bug on the XMl API is fixed
+            pass
 
     @log
     def set_predictor_on_virtual_server(self, vip, lb_method):
@@ -313,7 +315,6 @@ class BrocadeAdxDeviceDriverImpl():
             vsServer = self._adx_server(address)
             reply = (self.slb_service
                      .getVirtualServerConfiguration(vsServer))
-            LOG.debug(_("VS Configuration %s", reply))
 
             vsConfSeq = (self.slb_factory.create
                          ("ArrayOfVirtualServerConfigurationSequence"))
