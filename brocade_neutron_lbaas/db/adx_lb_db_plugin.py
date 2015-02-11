@@ -15,10 +15,11 @@
 #    under the License.
 #
 
-from brocade_neutron_lbaas.db import db_utils as utils, uuidutils
+from brocade_neutron_lbaas.db import db_utils as utils
 from brocade_neutron_lbaas.db.brocade_db_base import BrocadeAdxLoadBalancer
 from brocade_neutron_lbaas.db.brocade_db_base import BrocadeAdxPort
 import json
+import uuid
 
 def _format_date_time(date):
     if(date!=None):
@@ -69,7 +70,7 @@ class AdxLoadBalancerDbPlugin():
         with context.session.begin(subtransactions=True):
             device_db=None
             try:
-                device_db = BrocadeAdxLoadBalancer(id=uuidutils.generate_uuid())
+                device_db = BrocadeAdxLoadBalancer(id=str(uuid.uuid4())
                 self.set_obj_attr(device_db,d)
                 context.session.add(device_db)
                 context.session.flush()
@@ -80,7 +81,7 @@ class AdxLoadBalancerDbPlugin():
 
     def create_port(self,d,context):
         with context.session.begin(subtransactions=True):
-            port_db = BrocadeAdxPort(id=uuidutils.generate_uuid())
+            port_db = BrocadeAdxPort(id=str(uuid.uuid4())
             self.set_obj_attr(port_db,d)
             context.session.add(port_db)
             context.session.flush()
