@@ -16,6 +16,7 @@
 #
 
 import base64
+import logging
 import StringIO
 import time
 
@@ -25,7 +26,6 @@ from suds.sax import element as suds_element
 from suds import transport as suds_transport
 from suds.plugin import MessagePlugin
 
-from neutron.openstack.common import log as logging
 
 LOG = logging.getLogger(__name__)
 

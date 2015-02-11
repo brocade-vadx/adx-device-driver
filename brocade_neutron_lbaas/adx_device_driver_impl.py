@@ -16,17 +16,29 @@
 #
 #
 
+import logging
 import suds as suds
 import time
+import functools
 
-from neutron.common import log
 from neutron.context import get_admin_context
-from neutron.openstack.common import log as logging
 import adx_exception
 import adx_service
 
-
 LOG = logging.getLogger(__name__)
+
+def log(method):
+    @functools.wraps(method)
+    def wrapper(*args, **kwargs):
+        instance = args[0]
+        data = {"class_name": "%s.%s" % (instance.__class__.__module__,
+                                         instance.__class__.__name__),
+                "method_name": method.__name__,
+                "args": args[1:], "kwargs": kwargs}
+        LOG.debug('%(class_name)s method %(method_name)s'
+                  ' called with arguments %(args)s %(kwargs)s', data)
+        return method(*args, **kwargs)
+    return wrapper
 
 ADX_STANDARD_PORTS = [21, 22, 23, 25, 53, 69, 80, 109, 110, 119, 123, 143, 161,
                       389, 443, 554, 636, 993, 995, 1645, 1755, 1812,
@@ -236,7 +248,7 @@ class BrocadeAdxDeviceDriverImpl():
         except suds.WebFault as e:
             raise adx_exception.ConfigError(msg=e.message)
 
-    @log.log
+    @log
     def unbind_monitor_from_member(self, healthmonitor, member):
 
         rsIpAddress = member['address']
@@ -266,7 +278,7 @@ class BrocadeAdxDeviceDriverImpl():
         except suds.WebFault as e:
             raise adx_exception.ConfigError(msg=e.message)
 
-    @log.log
+    @log
     def set_predictor_on_virtual_server(self, vip, lb_method):
         try:
             server = self._adx_server(vip['address'], vip['name'])
@@ -288,7 +300,7 @@ class BrocadeAdxDeviceDriverImpl():
         except suds.WebFault as e:
             raise adx_exception.ConfigError(msg=e.message)
 
-    @log.log
+    @log
     def _update_virtual_server_properties(self, new_vip, old_vip):
         try:
             address = new_vip['address']
@@ -357,7 +369,7 @@ class BrocadeAdxDeviceDriverImpl():
                         "in device driver : %s"), e.message)
             raise adx_exception.ConfigError(msg=e.message)
 
-    @log.log
+    @log
     def create_virtual_server_port(self, vip):
         vsName = vip['name']
         vsIpAddress = vip['address']
@@ -394,12 +406,12 @@ class BrocadeAdxDeviceDriverImpl():
         except suds.WebFault as e:
             raise adx_exception.ConfigError(msg=e.message)
 
-    @log.log
+    @log
     def create_vip(self, vip):
         self.create_virtual_server(vip)
         self.create_virtual_server_port(vip)
 
-    @log.log
+    @log
     def delete_vip(self, vip):
         address = vip['address']
         port = vip['protocol_port']
@@ -418,7 +430,7 @@ class BrocadeAdxDeviceDriverImpl():
         except suds.WebFault as e:
             raise adx_exception.ConfigError(msg=e.message)
 
-    @log.log
+    @log
     def update_vip(self, new_vip, old_vip):
         vsIpAddress = new_vip['address']
         vsPort = new_vip['protocol_port']
@@ -464,7 +476,7 @@ class BrocadeAdxDeviceDriverImpl():
                     LOG.error(error_message)
                     raise adx_exception.UnsupportedFeature(msg=error_message)
 
-    @log.log
+    @log
     def _is_port_policy_in_use(self, healthmonitor_name):
         startIndex = 1
         numRetrieved = 15
@@ -503,7 +515,7 @@ class BrocadeAdxDeviceDriverImpl():
             return False
         return False
 
-    @log.log
+    @log
     def _validate_delay(self, monitor_type, delay):
         if monitor_type == "HTTP":
             if delay < 1 or delay > 120:
@@ -514,13 +526,13 @@ class BrocadeAdxDeviceDriverImpl():
                 raise adx_exception.UnsupportedOption(value=delay,
                                                       name="delay")
 
-    @log.log
+    @log
     def _validate_max_retries(self, max_retries):
         if max_retries < 1 or max_retries > 5:
             raise adx_exception.UnsupportedOption(value=max_retries,
                                                   name="max_retries")
 
-    @log.log
+    @log
     def _create_update_port_policy(self, healthmonitor, is_create=True):
 
         name = healthmonitor['id']
@@ -639,7 +651,7 @@ class BrocadeAdxDeviceDriverImpl():
                 LOG.error(_('Error in create/update port policy %s'), e)
                 raise adx_exception.ConfigError(msg=e.message)
 
-    @log.log
+    @log
     def create_health_monitor(self, healthmonitor, pool_id):
 
         # Limit to 1 Health Monitor per Pool
@@ -667,7 +679,7 @@ class BrocadeAdxDeviceDriverImpl():
             LOG.error(m)
             raise adx_exception.UnsupportedFeature(msg=m)
 
-    @log.log
+    @log
     def delete_health_monitor(self, healthmonitor):
         name = healthmonitor['id']
         monitor_type = healthmonitor['type']
@@ -691,7 +703,7 @@ class BrocadeAdxDeviceDriverImpl():
             LOG.error(m)
             raise adx_exception.UnsupportedFeature(msg=m)
 
-    @log.log
+    @log
     def update_health_monitor(self, new_hm, old_hm):
         monitor_type = new_hm['type']
 
@@ -773,12 +785,12 @@ class BrocadeAdxDeviceDriverImpl():
         except suds.WebFault as e:
             raise adx_exception.ConfigError(msg=e.message)
 
-    @log.log
+    @log
     def create_member(self, member):
         self._create_real_server(member)
         self._create_real_server_port(member)
 
-    @log.log
+    @log
     def delete_member(self, member):
         rsPortCount = self._get_server_port_count(member['address'], False)
         try:
@@ -793,13 +805,13 @@ class BrocadeAdxDeviceDriverImpl():
         except suds.WebFault as e:
             raise adx_exception.ConfigError(msg=e.message)
 
-    @log.log
+    @log
     def update_member(self, new_member, old_member):
 
         self._update_real_server_properties(new_member, old_member)
         self._update_real_server_port_properties(new_member, old_member)
 
-    @log.log
+    @log
     def write_mem(self):
         try:
             self.sys_service.writeConfig()
@@ -807,14 +819,14 @@ class BrocadeAdxDeviceDriverImpl():
             raise adx_exception.ConfigError(msg=e.message)
 
 
-    @log.log
+    @log
     def get_version(self):
         try:
             return self.sys_service.getVersion()
         except Exception as e:
             return None
 
-    @log.log
+    @log
     def create_pool(self, pool):
         pool_name = pool['name']
 
@@ -831,11 +843,11 @@ class BrocadeAdxDeviceDriverImpl():
         except suds.WebFault as e:
             raise adx_exception.ConfigError(msg=e.message)
 
-    @log.log
+    @log
     def update_pool(self, new_pool, old_pool):
         pass
 
-    @log.log
+    @log
     def delete_pool(self, pool):
         pool_name = pool['name']
         try:
@@ -848,7 +860,7 @@ class BrocadeAdxDeviceDriverImpl():
         except suds.WebFault as e:
             raise adx_exception.ConfigError(msg=e.message)
 
-    @log.log
+    @log
     def get_pool_stats(self, pool_id):
         bytesIn = 0
         bytesOut = 0
@@ -880,7 +892,7 @@ class BrocadeAdxDeviceDriverImpl():
                 "active_connections": activeConnections,
                 "total_connections": totalConnections}
 
-    @log.log
+    @log
     def _create_port_profile(self, port_profile):
         protocol_port = port_profile['protocol_port']
         try:
@@ -895,7 +907,7 @@ class BrocadeAdxDeviceDriverImpl():
         except suds.WebFault as e:
             LOG.debug(_('Exception in create port profile %s'), e)
 
-    @log.log
+    @log
     def _delete_port_profile(self, port_profile):
         protocol_port = port_profile['protocol_port']
         try:
@@ -905,7 +917,7 @@ class BrocadeAdxDeviceDriverImpl():
         except suds.WebFault as e:
             LOG.debug(_('Exception in Delete Port Profile %s'), e)
 
-    @log.log
+    @log
     def ifconfig_e1(self, ip_address, cidr):
         # Configure route only on e1
         try:
@@ -942,7 +954,7 @@ class BrocadeAdxDeviceDriverImpl():
             LOG.debug(_('Exception configuring e1 %s'), e)
             raise adx_exception.ConfigError(msg=e.message)
 
-    @log.log
+    @log
     def create_static_route(self, destIPAddress, networkMask, nexthopIPAddress):
         try:
             staticRoute = self.net_factory.create('StaticRoute')
@@ -961,7 +973,7 @@ class BrocadeAdxDeviceDriverImpl():
             LOG.debug(_('Exception configuring static route %s'), e)
             raise adx_exception.ConfigError(msg=e.message)
 
-    @log.log
+    @log
     def enable_source_nat(self):
         try:
             globalConfig = self.slb_factory.create('GlobalSlbConfiguration')

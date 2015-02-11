@@ -33,9 +33,5 @@ class ConfigError(qexception.NeutronException):
 class NoValidDevice(qexception.NotFound):
     message = _("No valid device found")
 
-
-class NoValidDeviceFile(qexception.NotFound):
-    message = _("Device Inventory File %(name)s either not found or invalid")
-
 class StartupError(qexception.NotFound):
     message = _("ADX device Driver configuration Error: %(msg)s")

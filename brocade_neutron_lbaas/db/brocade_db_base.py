@@ -8,16 +8,15 @@
  use it only in accordance with the terms of the license agreement
  you entered into with Brocade Communication Systems.
 '''
+
+import sqlalchemy as sa
 from sqlalchemy import orm
 from sqlalchemy import types
-
 from sqlalchemy.ext import declarative
 from sqlalchemy.orm import object_mapper
-import sqlalchemy as sa
 from sqlalchemy.types import TypeDecorator
 
 from brocade_neutron_lbaas.db import uuidutils
-
 
 class ModelBase(object):
     """Base class for models."""

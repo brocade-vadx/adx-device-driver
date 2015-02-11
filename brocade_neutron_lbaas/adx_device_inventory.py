@@ -16,21 +16,18 @@
 #    under the License.
 #
 
+import ConfigParser
 import json
+import logging
 from oslo.config import cfg
 
-from neutron.openstack.common import log as logging
-from neutron.common import exceptions as q_exc
+import adx_exception
 import adx_service
-import ConfigParser
 from db.db_base import configure_db
 from db.adx_lb_db_plugin import AdxLoadBalancerDbPlugin
-from neutron.openstack.common import log as logging
 from db.context import Context
-import adx_exception as adx_exception
+
 LOG = logging.getLogger(__name__)
-
-
 
 brocade_device_driver_opts = [
     cfg.StrOpt('devices_file_name',
