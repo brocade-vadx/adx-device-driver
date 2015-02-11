@@ -15,8 +15,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 #
-# @author: Pattabi Ayyasami, Brocade Communication Systems, Inc.
-#
+
 import json
 from oslo.config import cfg
 

@@ -35,7 +35,6 @@ class AdxLoadBalancerDbPlugin():
                'management_ip': device['management_ip'],
                'user': device['user'],
                'password': device['password'],
-               'additional_info': device.get('additional_info'),
                'status': device['status'],
                'ha_config_type':device['ha_config_type'],
                'communication_type':device['communication_type'],

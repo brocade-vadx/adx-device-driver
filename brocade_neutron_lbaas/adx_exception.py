@@ -14,8 +14,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 #
-# @author: Pattabi Ayyasami, Brocade Communications Systems,Inc.
 #
+
 from neutron.common import exceptions as qexception
 
 

@@ -1,0 +1,3 @@
+include README brocade_neutron_lbaas
+recursive-include conf *
+global-exclude *.pyc

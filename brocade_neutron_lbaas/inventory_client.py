@@ -1,23 +1,32 @@
-'''
- Copyright 2013 by Brocade Communication Systems
- All rights reserved.
+# vim: tabstop=4 shiftwidth=4 softtabstop=4
+#
+# Copyright 2013 Brocade Communications Systems, Inc.  All rights reserved.
+#
+#    Licensed under the Apache License, Version 2.0 (the "License"); you may
+#    not use this file except in compliance with the License. You may obtain
+#    a copy of the License at
+#
+#         http://www.apache.org/licenses/LICENSE-2.0
+#
+#    Unless required by applicable law or agreed to in writing, software
+#    distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+#    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+#    License for the specific language governing permissions and limitations
+#    under the License.
+#
 
- This software is the confidential and proprietary information
- of Brocade Communication Systems, ("Confidential Information").
- You shall not disclose such Confidential Information and shall
- use it only in accordance with the terms of the license agreement
- you entered into with Brocade Communication Systems.
-'''
+import sys
 from db.adx_lb_db_plugin import  AdxLoadBalancerDbPlugin
 from db.context import Context
 import argparse
 import json
 import configparser
 from db.db_base import configure_db
-import sys
+ 
 
+plugin = None
+ctx = None
 
-        
 def create_device(device_args):
     print "Create Device - " + device_args["management_ip"]
     device = {"management_ip":device_args["management_ip"],
@@ -29,7 +38,6 @@ def create_device(device_args):
     device["name"] = device_args.get("name")
     device["version"] = device_args.get("version")
     device["status_description"] = device_args.get("status_description")
-    device["additional_info"] = device_args.get("additional_info")
     device["ha_config_type"] = device_args.get("ha_config_type")
     device["tenant_id"] = device_args.get("tenant_id")
     device["nova_instance_id"] = device_args.get("nova_instance_id")
@@ -77,7 +85,6 @@ def update_device(device_args):
     device["version"] = device_args.get("version")
     device["status"] = device_args.get("status")
     device["status_description"] = device_args.get("status_description")
-    device["additional_info"] = device_args.get("additional_info")
     device["ha_config_type"] = device_args.get("ha_config_type")
     device["tenant_id"] = device_args.get("tenant_id")
     device["nova_instance_id"] = device_args.get("nova_instance_id")
@@ -119,7 +126,8 @@ def list_ports(port_args):
         print json.dumps(port,indent=4)
         print ""
         
-if __name__ == '__main__':
+def main(argv=sys.argv[1:]):
+    global plugin, ctx
 
     devices_file_name = unicode('/etc/neutron/services/loadbalancer/brocade/device_inventory.ini')
     config=configparser.ConfigParser()
@@ -156,7 +164,6 @@ if __name__ == '__main__':
     device_parser_create.add_argument('--status', dest='status', default="active", required = False, help='active, stopped, paused, suspended, error, inactive')
     device_parser_create.add_argument('--status_description', dest='status_description', required = False, help='status description')
     device_parser_create.add_argument('--ha_config_type', dest='ha_config_type', default="PRIMARY", required = False, help='PRIMARY, SECONDARY')
-    device_parser_create.add_argument('--additional_info', dest='additional_info', required = False, help='A string to store additional informaton about the device/status etc')
     device_parser_create.set_defaults(func=create_device)
 
     port_parser_create.add_argument('--subnet_id', dest='subnet_id',required=True, help='id of the subnet or ALL for default device')
@@ -177,7 +184,6 @@ if __name__ == '__main__':
     device_parser_update.add_argument('--status', dest='status', required = False, help='active, stopped, paused, suspended, error, inactive')
     device_parser_update.add_argument('--status_description', dest='status_description', required = False, help='status description')
     device_parser_update.add_argument('--ha_config_type', dest='ha_config_type', required = False, help='Primary, Secondary')
-    device_parser_update.add_argument('--additional_info', dest='additional_info', required = False, help='A string to store additional informaton about the device/status etc')
     device_parser_update.set_defaults(func=update_device)
 
     device_parser_delete.add_argument('--id', dest='id', required=True, help='Device ID')
@@ -192,3 +198,6 @@ if __name__ == '__main__':
     args = parser.parse_args()
     args_dict = vars(args)
     args.func(args_dict)
+
+if __name__ == '__main__':
+    main()

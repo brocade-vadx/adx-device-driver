@@ -14,7 +14,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 #
-# @author: Pattabi Ayyasami, Brocade Communications Systems,Inc.
 #
 
 import suds as suds
@@ -23,7 +22,6 @@ import time
 from neutron.common import log
 from neutron.context import get_admin_context
 from neutron.openstack.common import log as logging
-from neutron.services.loadbalancer import constants
 import adx_exception
 import adx_service
 
@@ -35,14 +33,14 @@ ADX_STANDARD_PORTS = [21, 22, 23, 25, 53, 69, 80, 109, 110, 119, 123, 143, 161,
                       3389, 5060, 5061, 7070]
 
 ADX_PREDICTOR_MAP = {
-    constants.LB_METHOD_ROUND_ROBIN: 'ROUND_ROBIN',
-    constants.LB_METHOD_LEAST_CONNECTIONS: 'LEAST_CONN'
+    "ROUND_ROBIN": 'ROUND_ROBIN',
+    "LEAST_CONNECTIONS": 'LEAST_CONN'
 }
 
 ADX_PROTOCOL_MAP = {
-    constants.PROTOCOL_TCP: 'TCP',
-    constants.PROTOCOL_HTTP: 'HTTP',
-    constants.PROTOCOL_HTTPS: 'SSL'
+    "TCP": 'TCP',
+    "HTTP": 'HTTP',
+    "HTTPS": 'SSL'
 }
 
 
@@ -381,7 +379,7 @@ class BrocadeAdxDeviceDriverImpl():
             session_persistence = vip.get('session_persistence')
             if session_persistence:
                 sp_type = session_persistence['type']
-                if sp_type == constants.SESSION_PERSISTENCE_SOURCE_IP:
+                if sp_type == "SOURCE_IP":
                     vsPortConfig.enableSticky = True
                 else:
                     error_message = (_('Session Persistence of type %s '
@@ -454,7 +452,7 @@ class BrocadeAdxDeviceDriverImpl():
                     raise adx_exception.ConfigError(msg=e.message)
             else:
                 type = new_vip['session_persistence']['type']
-                if type == constants.SESSION_PERSISTENCE_SOURCE_IP:
+                if type == "SOURCE_IP":
                     try:
                         (self.slb_service
                          .enableStickyOnVirtualServerPort(vsServerPort))
@@ -507,11 +505,11 @@ class BrocadeAdxDeviceDriverImpl():
 
     @log.log
     def _validate_delay(self, monitor_type, delay):
-        if monitor_type == constants.HEALTH_MONITOR_HTTP:
+        if monitor_type == "HTTP":
             if delay < 1 or delay > 120:
                 raise adx_exception.UnsupportedOption(value=delay,
                                                       name="delay")
-        elif monitor_type == constants.HEALTH_MONITOR_HTTPS:
+        elif monitor_type == "HTTPS":
             if delay < 5 or delay > 120:
                 raise adx_exception.UnsupportedOption(value=delay,
                                                       name="delay")
@@ -532,30 +530,27 @@ class BrocadeAdxDeviceDriverImpl():
         max_retries = healthmonitor['max_retries']
         self._validate_max_retries(max_retries)
 
-        if monitor_type in [constants.HEALTH_MONITOR_HTTP,
-                            constants.HEALTH_MONITOR_HTTPS,
-                            constants.HEALTH_MONITOR_TCP]:
+        if monitor_type in ["HTTP",
+                            "HTTPS",
+                            "TCP"]:
             portPolicy = self.slb_factory.create('PortPolicy')
 
-            if monitor_type == constants.HEALTH_MONITOR_HTTP:
+            if monitor_type == "HTTP":
                 portPolicy.name = name
-                portPolicy.protocol = (ADX_PROTOCOL_MAP
-                                       .get(constants.PROTOCOL_HTTP))
+                portPolicy.protocol = (ADX_PROTOCOL_MAP.get("HTTP"))
                 portPolicy.l4Check = False
-            elif monitor_type == constants.HEALTH_MONITOR_HTTPS:
+            elif monitor_type == "HTTPS":
                 portPolicy.name = name
-                portPolicy.protocol = (ADX_PROTOCOL_MAP
-                                       .get(constants.PROTOCOL_HTTPS))
+                portPolicy.protocol = (ADX_PROTOCOL_MAP.get("HTTPS"))
                 portPolicy.l4Check = False
-            elif monitor_type == constants.HEALTH_MONITOR_TCP:
+            elif monitor_type == "TCP":
                 # TCP Monitor
                 portPolicy.name = name
                 portPolicy.l4Check = True
 
                 # Setting Protocol and Port to HTTP
                 # so that this can be bound to a Real Server Port
-                portPolicy.protocol = (ADX_PROTOCOL_MAP
-                                       .get(constants.PROTOCOL_HTTP))
+                portPolicy.protocol = (ADX_PROTOCOL_MAP.get("HTTP"))
 
             portPolicy.keepAliveInterval = delay
             portPolicy.numRetries = max_retries
@@ -585,7 +580,7 @@ class BrocadeAdxDeviceDriverImpl():
                         start_status_codes.append(int(code))
                         end_status_codes.append(int(code))
 
-            if monitor_type == constants.HEALTH_MONITOR_HTTP:
+            if monitor_type == "HTTP":
                 httpPortPolicy = (self.slb_factory
                                   .create('HttpPortPolicy'))
                 urlHealthCheck = (self.slb_factory
@@ -605,7 +600,7 @@ class BrocadeAdxDeviceDriverImpl():
 
                 portPolicy.httpPolInfo = httpPortPolicy
 
-            elif monitor_type == constants.HEALTH_MONITOR_TCP:
+            elif monitor_type == "TCP":
                 httpPortPolicy = (self.slb_factory
                                   .create('HttpPortPolicy'))
                 urlHealthCheck = (self.slb_factory
@@ -616,7 +611,7 @@ class BrocadeAdxDeviceDriverImpl():
 
                 portPolicy.httpPolInfo = httpPortPolicy
 
-            elif monitor_type == constants.HEALTH_MONITOR_HTTPS:
+            elif monitor_type == "HTTPS":
                 sslPortPolicy = (self.slb_factory
                                  .create('HttpPortPolicy'))
                 urlHealthCheck = (self.slb_factory
@@ -659,15 +654,15 @@ class BrocadeAdxDeviceDriverImpl():
 
         # Create Port Policy
         # if the Monitor Type is TCP / HTTP / HTTPS
-        if monitor_type in [constants.HEALTH_MONITOR_HTTP,
-                            constants.HEALTH_MONITOR_HTTPS,
-                            constants.HEALTH_MONITOR_TCP]:
+        if monitor_type in ["HTTP",
+                            "HTTPS",
+                            "TCP"]:
             if not self._does_port_policy_exist(healthmonitor):
                 self._create_update_port_policy(healthmonitor)
             else:
                 LOG.debug(_('Port Policy %s already exists on the device'),
                           name)
-        elif monitor_type == constants.HEALTH_MONITOR_PING:
+        elif monitor_type == "PING":
             m = _('Health Monitor of type PING not supported')
             LOG.error(m)
             raise adx_exception.UnsupportedFeature(msg=m)
@@ -677,9 +672,9 @@ class BrocadeAdxDeviceDriverImpl():
         name = healthmonitor['id']
         monitor_type = healthmonitor['type']
 
-        if monitor_type in [constants.HEALTH_MONITOR_HTTP,
-                            constants.HEALTH_MONITOR_HTTPS,
-                            constants.HEALTH_MONITOR_TCP]:
+        if monitor_type in ["HTTP",
+                            "HTTPS",
+                            "TCP"]:
             if not self._does_port_policy_exist(healthmonitor):
                 LOG.debug(_('Health Monitor %s does not '
                           'exist on the device'), name)
@@ -691,7 +686,7 @@ class BrocadeAdxDeviceDriverImpl():
                      .deletePortPolicy(name))
                 except suds.WebFault as e:
                     raise adx_exception.ConfigError(msg=e.message)
-        elif monitor_type == constants.HEALTH_MONITOR_PING:
+        elif monitor_type == "PING":
             m = _('Delete of PING Monitor not supported')
             LOG.error(m)
             raise adx_exception.UnsupportedFeature(msg=m)
@@ -702,11 +697,11 @@ class BrocadeAdxDeviceDriverImpl():
 
         # Create Port Policy
         # if the Monitor Type is TCP / HTTP / HTTPS
-        if monitor_type in [constants.HEALTH_MONITOR_HTTP,
-                            constants.HEALTH_MONITOR_HTTPS,
-                            constants.HEALTH_MONITOR_TCP]:
+        if monitor_type in ["HTTP",
+                            "HTTPS",
+                            "TCP"]:
             self._create_update_port_policy(new_hm, False)
-        elif monitor_type == constants.HEALTH_MONITOR_PING:
+        elif monitor_type == "PING":
             m = _('Health Monitor of type PING not supported')
             LOG.error(m)
             raise adx_exception.UnsupportedFeature(msg=m)
@@ -880,10 +875,10 @@ class BrocadeAdxDeviceDriverImpl():
             except suds.WebFault:
                 pass
 
-        return {constants.STATS_IN_BYTES: bytesIn,
-                constants.STATS_OUT_BYTES: bytesOut,
-                constants.STATS_ACTIVE_CONNECTIONS: activeConnections,
-                constants.STATS_TOTAL_CONNECTIONS: totalConnections}
+        return {"bytes_in": bytesIn,
+                "bytes_out": bytesOut,
+                "active_connections": activeConnections,
+                "total_connections": totalConnections}
 
     @log.log
     def _create_port_profile(self, port_profile):

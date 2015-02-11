@@ -17,7 +17,6 @@ import sqlalchemy as sa
 from sqlalchemy.types import TypeDecorator
 
 from brocade_neutron_lbaas.db import uuidutils
-import jsonutils
 
 
 class ModelBase(object):
@@ -108,19 +107,6 @@ class HasTenant(object):
     # NOTE(jkoelker) tenant_id is just a free form string ;(
     tenant_id = sa.Column(sa.String(255))
 
-class JsonType(TypeDecorator):
-    impl = types.String
-
-    def process_bind_param(self, value, engine):
-        if value is not None:
-            return jsonutils.dumps(value)
-        return jsonutils.dumps({})
-
-    def process_result_value(self, value, engine):
-        if value is not None:
-            return jsonutils.loads(value)
-        return {}
-
 
 class BrocadeAdxGroup(BASEV2,HasId):
     name = sa.Column(sa.String(256),nullable=False)
@@ -140,7 +126,6 @@ class BrocadeAdxLoadBalancer(BASEV2, HasId, HasTenant):
     ha_config_type=sa.Column(sa.Enum("PRIMARY","SECONDARY",name="ha_config_type"))
     communication_type=sa.Column(sa.Enum("HTTP","HTTPS",name="communication_type"))
     status_description = sa.Column(sa.String(36), nullable=True)
-    additional_info = sa.Column(JsonType(255), nullable=True)
     created_time = sa.Column(sa.DateTime)
     last_updated_time = sa.Column(sa.DateTime)
     deleted_at=sa.Column(sa.DateTime)

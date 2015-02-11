@@ -14,13 +14,10 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 #
-# @author: Pattabi Ayyasami, Brocade Communications Systems,Inc.
-#
 
 from neutron.common import log
 from neutron.context import get_admin_context
 from neutron.openstack.common import log as logging
-from neutron.services.loadbalancer import constants
 
 import adx_device_driver_impl as driver_impl
 import adx_device_inventory as device_inventory
@@ -238,9 +235,9 @@ class BrocadeAdxDeviceDriverV1():
         impl.create_health_monitor(obj, pool_id)
 
         monitor_type = obj['type']
-        if monitor_type in [constants.HEALTH_MONITOR_HTTP,
-                            constants.HEALTH_MONITOR_HTTPS,
-                            constants.HEALTH_MONITOR_TCP]:
+        if monitor_type in ["HTTP",
+                            "HTTPS",
+                            "TCP"]:
             members = self._get_pool_members(pool_id)
             for member in members:
                 impl.bind_monitor_to_member(obj, member)

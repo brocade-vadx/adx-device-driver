@@ -14,8 +14,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 #
-# @author: Pattabi Ayyasami, Brocade Communications Systems,Inc.
-#
+
 import base64
 import StringIO
 import time
