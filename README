@@ -1,11 +1,16 @@
 This repository contains the code for the Brocade Neutron LBaaS Device Driver.
-Device driver will need to be installed as a python module in openstack installation.
-The device driver manages the adx device inventory at the specified database location.
-It also has client libraries to add, delete, update, and list devices along with its associated ports
+Brocade Neutron LBaaS Device Driver package needs to be installed as a python package in openstack installation.
 
-- Download the code (brocade_neutron_lbaas-1.0.tar.gz) to any temporary location
+The inventory of Brocade load balancer devices are maintained in the database (same as neutron or user can define a separate databse). The device driver selects a Brocade load balancer device from the device inventory based on "subnet_id" specified in the request.
 
-- Install the device driver python module
+The device inventory can be updated either via the command line inventory client program (included in this package) and/or via the Brocade ADX Inventory Listener Service. The Brocade ADX Inventory Listener Service listens for nova notifications for the Brocade load balancer VM instances and automatically updates the device inventory database.
+
+Install Instructions
+====================
+
+- Install the Brocade Neutron LBaaS Device Driver Package
+
+    - Download the code (brocade_neutron_lbaas-1.0.tar.gz) to a temporary location
 
     - Change directory to the downloaded temporary location.
 
@@ -18,17 +23,12 @@ It also has client libraries to add, delete, update, and list devices along with
 - Modify the device_inventory.ini file (in /etc/neutron/services/loadbalancer/brocade directory) to point to the database for the device inventory DB tables.
 
 
-Client Library Usage
-====================
+Brocade Inventory Client Usage
+==============================
 
-Client Library/Program is needed to explictly add/delete vADX/ADX devices and
-ports to the device inventory. The device driver selects the device from the 
-device inventory based on "subnet_id" specified in the request.
+Brocade Inventory Client Command Line program (included as part of this package) can be used to manage the device inventory of the brocade load balancer devices.
 
-Usage of Client Library is optional. User can run the Brocade ADX Inventory Listener
-Service to automatically update the device inventory. 
-Please refer to https://github.com/brocade-vadx/brocade_adx_inventory_listener for details
-on the Brocade ADX Inventory Listener.
+User can also use the Brocade ADX Inventory Listener Service to automatically update the device inventory. Please refer to https://github.com/brocade-vadx/brocade_adx_inventory_listener for details on the Brocade ADX Inventory Listener.
 
 brocade_inventory_client  -h
 
