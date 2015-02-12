@@ -8,35 +8,31 @@ The device inventory can be updated either via the command line inventory client
 Install Instructions
 ====================
 
-- Install the Brocade Neutron LBaaS Device Driver Package
+- Download and Install the Brocade Neutron LBaaS Device Driver Python Package
 
-    - Download the code (brocade_neutron_lbaas-1.0.tar.gz) to a temporary location
+    - From a temporary location, run "https://github.com/brocade-vadx/adx-device-driver.git"
 
-    - Change directory to the downloaded temporary location.
-
-    - Run "tar zxvf brocade_neutron_lbaas-1.0.tar.gz"
-
-    - Change directory ("cd brocade_neutron_lbaas-1.0")
+    - Change directory ("cd adx-device-driver")
 
     - Run "sudo python setup.py install"
 
-- Modify the device_inventory.ini file (in /etc/neutron/services/loadbalancer/brocade directory) to point to the database for the device inventory DB tables.
+- Edit device_inventory.ini file (in /etc/neutron/services/loadbalancer/brocade directory) and specify the database name for the device inventory DB tables. The database could be an existing database or a new database.
 
 
-Brocade Inventory Client Usage
-==============================
+Brocade Device Inventory Client Usage
+======================================
 
-Brocade Inventory Client Command Line program (included as part of this package) can be used to manage the device inventory of the brocade load balancer devices.
+Brocade Device Inventory Client Command Line Utility (included as part of this package) can be used to manage the device inventory of the brocade load balancer devices.
 
-User can also use the Brocade ADX Inventory Listener Service to automatically update the device inventory. Please refer to https://github.com/brocade-vadx/brocade_adx_inventory_listener for details on the Brocade ADX Inventory Listener.
+User can also use the Brocade Nova Listener Service to automatically update the device inventory. Please refer to https://github.com/brocade-vadx/brocade_adx_inventory_listener for details on the Brocade Nova Listener.
 
 brocade_inventory_client  -h
 
 usage: brocade_inventory_client [-h]
 
-                               {create-device,delete-device,update-device,list-devices,add-port,delete-port,update-port,list-ports}
+    {create-device,delete-device,update-device,list-devices,add-port,delete-port,update-port,list-ports}
 
-Command Line Arguments of Device Inventory Client
+Command Line Arguments of Brocade Device Inventory Client
 
 optional arguments:
 
@@ -83,4 +79,3 @@ brocade_inventory_client add-port --subnet_id 54952d95-4b42-4d5b-93c1-3fff93b04e
 brocade_inventory_client delete-port --id 9eb32e5f-311c-4db5-b1e0-e89180b32d01
 
 brocade_inventory_client list-ports
-
