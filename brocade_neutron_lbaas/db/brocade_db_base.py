@@ -121,8 +121,8 @@ class BrocadeAdxLoadBalancer(BASEV2, HasId, HasTenant):
     version = sa.Column(sa.String(36))
     management_ip = sa.Column(sa.String(36))
     nova_instance_id = sa.Column(sa.String(36), unique=True)
-    user = sa.Column(sa.String(36), nullable=False)
-    password = sa.Column(sa.String(36), nullable=False)
+    user = sa.Column(sa.String(36))
+    password = sa.Column(sa.String(36))
     status = sa.Column(sa.String(36))
     ha_config_type = sa.Column(sa.Enum("PRIMARY",
                                        "SECONDARY",
@@ -130,7 +130,7 @@ class BrocadeAdxLoadBalancer(BASEV2, HasId, HasTenant):
     communication_type = sa.Column(sa.Enum("HTTP",
                                            "HTTPS",
                                            name="communication_type"))
-    status_description = sa.Column(sa.String(36), nullable=True)
+    status_description = sa.Column(sa.String(36))
     created_time = sa.Column(sa.DateTime)
     last_updated_time = sa.Column(sa.DateTime)
     deleted_at = sa.Column(sa.DateTime)

@@ -60,7 +60,7 @@ class BrocadeAdxDeviceDriverV1():
         if not filtered:
             LOG.error(_('No active device was found for subnet: %s'),
                       subnet_id)
-            raise device_inventory.NoValidDevice()
+            raise adx_exception.NoValidDevice()
 
         device = filtered[0]
         return device

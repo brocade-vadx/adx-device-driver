@@ -16,22 +16,24 @@
 #
 
 import json
+import datetime
 import uuid
 from sqlalchemy.orm import exc
 
-from brocade_neutron_lbaas.db import db_utils as utils
+from neutron.db import common_db_mixin
+
 from brocade_neutron_lbaas.db.brocade_db_base import BrocadeAdxLoadBalancer
 from brocade_neutron_lbaas.db.brocade_db_base import BrocadeAdxPort
 
 
 def _format_date_time(date):
     if date:
-        return json.dumps(date.strftime("%Y-%m-%d %H:%M:%S"))
+        return date.strftime("%Y-%m-%d %H:%M:%S")
     else:
         return None
 
 
-class AdxLoadBalancerDbPlugin():
+class AdxLoadBalancerDbPlugin(common_db_mixin.CommonDbMixin):
     def _make_device_dict(self, device, fields=None):
         res = {'id': device['id'],
                'tenant_id': device['tenant_id'],
@@ -48,14 +50,10 @@ class AdxLoadBalancerDbPlugin():
                'last_updated_time':
                    _format_date_time(device['last_updated_time']),
                'deleted_at': _format_date_time(device['deleted_at']),
-               'status_description': device.get('status_descritpion')}
-        port_objs = device.ports
-        ports = []
-        if port_objs:
-            for port in port_objs:
-                ports.append(self._make_port_dict(port))
-        res['ports'] = ports
-        return utils._fields(res, fields)
+               'status_description': device.get('status_description')}
+
+        res['ports'] = [self._make_port_dict(port) for port in device['ports']]
+        return self._fields(res, fields)
 
     def _make_port_dict(self, port, fields=None):
         res = {'id': port['id'],
@@ -64,9 +62,8 @@ class AdxLoadBalancerDbPlugin():
                'mac': port['mac'],
                'ip_address': port['ip_address'],
                'network_id': port['network_id']}
-        return utils._fields(res, fields)
+        return self._fields(res, fields)
 
-    """
     def _get_resource(self, context, model, id):
         resource = None
         try:
@@ -74,9 +71,8 @@ class AdxLoadBalancerDbPlugin():
         except exc.NoResultFound:
             if issubclass(model, (BrocadeAdxLoadBalancer,
                                   BrocadeAdxPort)):
-                raise Exception("Entity not found")
+                raise Exception("%s not found" % id)
         return resource
-    """
 
     def set_obj_attr(self, obj, obj_dict):
         for k, v in obj_dict.iteritems():
@@ -86,6 +82,7 @@ class AdxLoadBalancerDbPlugin():
     def create_adxloadbalancer(self, d, context):
         with context.session.begin(subtransactions=True):
             device_db = None
+            d["created_time"] = datetime.datetime.now()
             try:
                 device_db = BrocadeAdxLoadBalancer(id=str(uuid.uuid4()))
                 self.set_obj_attr(device_db, d)
@@ -108,7 +105,7 @@ class AdxLoadBalancerDbPlugin():
 
     def delete_port(self, port_id, context):
         with context.session.begin(subtransactions=True):
-            port_db = utils._get_resource(context,
+            port_db = self._get_resource(context,
                                          BrocadeAdxPort,
                                          port_id)
             context.session.delete(port_db)
@@ -116,8 +113,10 @@ class AdxLoadBalancerDbPlugin():
         return port_info
 
     def update_adxloadbalancer(self, d, context):
+        d["last_updated_time"] = datetime.datetime.now()
+
         with context.session.begin(subtransactions=True):
-            device_db = utils._get_resource(context,
+            device_db = self._get_resource(context,
                                            BrocadeAdxLoadBalancer,
                                            d['id'])
             self.set_obj_attr(device_db, d)
@@ -129,7 +128,7 @@ class AdxLoadBalancerDbPlugin():
     def delete_adxloadbalancer(self, device_id, context):
         device_info = None
         with context.session.begin(subtransactions=True):
-            device_db = utils._get_resource(context,
+            device_db = self._get_resource(context,
                                            BrocadeAdxLoadBalancer,
                                            device_id)
             device_info = self._make_device_dict(device_db)
@@ -138,17 +137,15 @@ class AdxLoadBalancerDbPlugin():
         return device_info
 
     def get_port(self, context, filters=None, fields=None):
-        return utils._get_collection(context,
+        return self._get_collection(context,
                                     BrocadeAdxPort,
                                     self._make_port_dict,
                                     filters=filters,
                                     fields=fields)
 
     def get_adxloadbalancer(self, context, filters=None, fields=None):
-        joins = [BrocadeAdxPort]
-        return utils._get_collection(context,
+        return self._get_collection(context,
                                      BrocadeAdxLoadBalancer,
                                      self._make_device_dict,
                                      filters=filters,
-                                     fields=fields,
-                                     joins=joins)
+                                     fields=fields)

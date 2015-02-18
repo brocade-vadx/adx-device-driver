@@ -17,12 +17,11 @@
 
 import sys
 from db.adx_lb_db_plugin import AdxLoadBalancerDbPlugin
-from db.context import Context
+from db import context
 import argparse
 import json
 import ConfigParser
 from db.db_base import configure_db
-
 
 plugin = None
 ctx = None
@@ -54,6 +53,15 @@ def create_device(device_args):
         print e.message
 
 
+def delete_device(device_args):
+    print "Delete Device - " + device_args['id']
+    try:
+        plugin.delete_adxloadbalancer(device_args['id'], ctx)
+        print "Device " + device_args['id'] + " deleted successfully"
+    except Exception as e:
+        print "Failed to delete device: ", e.message
+
+
 def create_port(port_args):
     port = {"subnet_id": port_args["subnet_id"],
             "adx_lb_id": port_args["adx_lb_id"]}
@@ -74,25 +82,34 @@ def delete_port(port_args):
     print "Delete Port - " + port_args['id']
     try:
         plugin.delete_port(port_args['id'], ctx)
+        print "Port " + port_args['id'] + " deleted successfully"
     except Exception as e:
-        print "Failed to delete port "
-        print e.message
-    print "Port " + port_args['id'] + " deleted successfully"
+        print "Failed to delete port: ", e.message
 
 
 def update_device(device_args):
-    device["id"] = device_args['id']
-    device["user"] = device_args.get("user")
-    device["password"] = device_args.get("password")
-    device["communication_type"] = \
-        device_args.get("communication_type", "HTTP")
-    device["name"] = device_args.get("name")
-    device["version"] = device_args.get("version")
-    device["status"] = device_args.get("status")
-    device["status_description"] = device_args.get("status_description")
-    device["ha_config_type"] = device_args.get("ha_config_type")
-    device["tenant_id"] = device_args.get("tenant_id")
-    device["nova_instance_id"] = device_args.get("nova_instance_id")
+    device = {"id": device_args['id']}
+    if "user" in device_args:
+        device["user"] = device_args.get("user")
+    if "password" in device_args:
+        device["password"] = device_args.get("password")
+    if "communication_type" in device_args:
+        device["communication_type"] = \
+            device_args.get("communication_type", "HTTP")
+    if "name" in device_args:
+        device["name"] = device_args.get("name")
+    if "version" in device_args:
+        device["version"] = device_args.get("version")
+    if "status" in device_args:
+        device["status"] = device_args.get("status")
+    if "status_description" in device_args:
+        device["status_description"] = device_args.get("status_description")
+    if "ha_config_type" in device_args:
+        device["ha_config_type"] = device_args.get("ha_config_type")
+    if "tenant_id" in device_args:
+        device["tenant_id"] = device_args.get("tenant_id")
+    if "nova_instance_id" in device_args:
+        device["nova_instance_id"] = device_args.get("nova_instance_id")
     print json.dumps(device, indent=4)
     try:
         device = plugin.update_adxloadbalancer(device, ctx)
@@ -100,20 +117,6 @@ def update_device(device_args):
     except Exception as e:
         print "Failed to update device - " + device['id']
         print e.message
-
-
-def delete_device(device_args):
-    print "Delete Device - " + device_args['id']
-    device_filter = {'id': device_args['id']}
-    devices = plugin.get_adxloadbalancer(ctx, device_filter)
-
-    if len(devices) == 0:
-        print "Invalid Device - " + device_args['id']
-
-    for device in devices:
-        print json.dumps(device, indent=4)
-        plugin.delete_adxloadbalancer(device['id'], ctx)
-        print "Device " + device['id'] + " deleted successfully"
 
 
 def list_devices(device_args):
@@ -144,7 +147,7 @@ def main(argv=sys.argv[1:]):
     dburl = config.get('DEFAULT', 'db_url')
 
     configure_db(dburl)
-    ctx = Context()
+    ctx = context.Context()
     plugin = AdxLoadBalancerDbPlugin()
 
     parser = argparse.ArgumentParser(description='Command Line Arguments '
@@ -165,8 +168,6 @@ def main(argv=sys.argv[1:]):
                                                help='Add Port')
     port_parser_delete = subparsers.add_parser('delete-port',
                                                help='Delete Port')
-    port_parser_update = subparsers.add_parser('update-port',
-                                               help='Update Port')
     port_parser_list = subparsers.add_parser('list-ports',
                                              help='List Ports')
 
