@@ -113,7 +113,7 @@ def delete_device(device_args):
     for device in devices:
         print json.dumps(device, indent=4)
         plugin.delete_adxloadbalancer(device['id'], ctx)
-        print "Device " + device['management_ip'] + " deleted successfully"
+        print "Device " + device['id'] + " deleted successfully"
 
 
 def list_devices(device_args):
