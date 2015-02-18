@@ -13,25 +13,29 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
-#
-#
-
-from neutron.common import exceptions as qexception
 
 
-class UnsupportedFeature(qexception.NeutronException):
-    message = _("Unsupported Feature: %(msg)s")
+class BaseException(Exception):
+    def __init__(self, **kwargs):
+        super(BaseException, self).__init__(self.message % kwargs)
+        self.message = self.message % kwargs
 
 
-class UnsupportedOption(qexception.NeutronException):
-    message = _("Unsupported Value %(value)s specified for attribute %(name)s")
+class UnsupportedFeature(BaseException):
+    message = "Unsupported feature: %(msg)s"
 
 
-class ConfigError(qexception.NeutronException):
-    message = _("Configuration Error on the device: %(msg)s")
+class UnsupportedOption(BaseException):
+    message = "Unsupported Value %(value)s specified for attribute %(name)s"
 
-class NoValidDevice(qexception.NotFound):
-    message = _("No valid device found")
 
-class StartupError(qexception.NotFound):
-    message = _("ADX device Driver configuration Error: %(msg)s")
+class ConfigError(BaseException):
+    message = "Configuration error on the device: %(msg)s"
+
+
+class NoValidDevice(BaseException):
+    message = "No valid device found"
+
+
+class StartupError(BaseException):
+    message = "Device driver configuration error: %(msg)s"

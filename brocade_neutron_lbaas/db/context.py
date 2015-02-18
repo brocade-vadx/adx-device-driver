@@ -10,11 +10,12 @@
 '''
 from db_base import get_session
 
+
 class Context:
     _session = None
-    
+
     @property
     def session(self):
-        #if self._session is None:
+        # if self._session is None:
         self._session = get_session(True, False)
         return self._session

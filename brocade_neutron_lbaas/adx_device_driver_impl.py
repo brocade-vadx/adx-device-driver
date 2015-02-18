@@ -27,6 +27,7 @@ import adx_service
 
 LOG = logging.getLogger(__name__)
 
+
 def log(method):
     @functools.wraps(method)
     def wrapper(*args, **kwargs):
@@ -69,7 +70,6 @@ class BrocadeAdxDeviceDriverImpl():
 
         self.net_factory = service_clients[2].factory
         self.net_service = service_clients[2].service
-
 
     def _get_pool(self, pool_id):
         return self.plugin.get_pool(get_admin_context(), pool_id)
@@ -276,7 +276,7 @@ class BrocadeAdxDeviceDriverImpl():
              .append(realServerPortConfig))
             self.slb_service.setRealServersPortConfiguration(rsPortSeq)
         except suds.WebFault as e:
-            #raise adx_exception.ConfigError(msg=e.message)
+            # raise adx_exception.ConfigError(msg=e.message)
             # ignore the exception until the bug on the XMl API is fixed
             pass
 
@@ -501,7 +501,7 @@ class BrocadeAdxDeviceDriverImpl():
                 return any(policy.inUse for policy in policyList)
             else:
                 # Check if Port Policy is bound to a Real Server Port
-                #inUse = reply.policy.inUse
+                # inUse = reply.policy.inUse
                 return False
         except suds.WebFault:
             return False
@@ -819,7 +819,6 @@ class BrocadeAdxDeviceDriverImpl():
         except Exception as e:
             raise adx_exception.ConfigError(msg=e.message)
 
-
     @log
     def get_version(self):
         try:
@@ -923,7 +922,7 @@ class BrocadeAdxDeviceDriverImpl():
         # Configure route only on e1
         try:
 
-            (network,mask) = cidr.split('/')
+            (network, mask) = cidr.split('/')
 
             ifconfig = self.net_factory.create('InterfaceConfig')
             ifconfig.id.interfaceType = "ETHERNET"
@@ -938,7 +937,8 @@ class BrocadeAdxDeviceDriverImpl():
 
             # Configure ip address on e1
             ifid = self.net_factory.create('InterfaceID')
-            ipaddrSeq = self.net_factory.create('ArrayOfInterfaceIPAddressSequence')
+            ipaddrSeq = (self.net_factory
+                         .create('ArrayOfInterfaceIPAddressSequence'))
             ipaddr = self.net_factory.create('InterfaceIPAddress')
 
             ifid.portString = "1"
@@ -950,16 +950,20 @@ class BrocadeAdxDeviceDriverImpl():
 
             # Sending operations to the vLb
             self.net_service.setInterfaceConfig(interfaceConfigSeq)
-            self.net_service.addIPsToInterface(ifid,ipaddrSeq)
+            self.net_service.addIPsToInterface(ifid, ipaddrSeq)
         except suds.WebFault as e:
             LOG.debug(_('Exception configuring e1 %s'), e)
             raise adx_exception.ConfigError(msg=e.message)
 
     @log
-    def create_static_route(self, destIPAddress, networkMask, nexthopIPAddress):
+    def create_static_route(self,
+                            destIPAddress,
+                            networkMask,
+                            nexthopIPAddress):
         try:
             staticRoute = self.net_factory.create('StaticRoute')
-            staticRouteSeq = self.net_factory.create('ArrayOfStaticRouteSequence')
+            staticRouteSeq = (self.net_factory
+                              .create('ArrayOfStaticRouteSequence'))
 
             staticRoute.staticRouteType = 'STANDARD'
             staticRoute.ipVersion = 'IPV4'

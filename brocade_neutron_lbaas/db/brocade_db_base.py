@@ -17,11 +17,10 @@ from sqlalchemy.orm import object_mapper
 from sqlalchemy.types import TypeDecorator
 import uuid
 
+
 class ModelBase(object):
     """Base class for models."""
-    #__table_initialized__ = False
 
-   
     def __setitem__(self, key, value):
         setattr(self, key, value)
 
@@ -61,6 +60,7 @@ class ModelBase(object):
         local.update(joined)
         return local.iteritems()
 
+
 class BrocadeBase(ModelBase):
     """Base class for Neutron Models."""
 
@@ -95,9 +95,10 @@ class BrocadeBaseV2(BrocadeBase):
 
 BASEV2 = declarative.declarative_base(cls=BrocadeBaseV2)
 
-# HasId
+
 class HasId(object):
-    id = sa.Column(sa.String(36),primary_key=True,default=str(uuid.uuid4()))
+    id = sa.Column(sa.String(36), primary_key=True, default=str(uuid.uuid4()))
+
 
 class HasTenant(object):
     """Tenant mixin, add to subclasses that have a tenant."""
@@ -106,9 +107,11 @@ class HasTenant(object):
     tenant_id = sa.Column(sa.String(255))
 
 
-class BrocadeAdxGroup(BASEV2,HasId):
-    name = sa.Column(sa.String(256),nullable=False)
-    devices=orm.relationship("BrocadeAdxLoadBalancer",backref="brocadeadxgroups",cascade="all")
+class BrocadeAdxGroup(BASEV2, HasId):
+    name = sa.Column(sa.String(256), nullable=False)
+    devices = orm.relationship("BrocadeAdxLoadBalancer",
+                               backref="brocadeadxgroups",
+                               cascade="all")
 
 
 class BrocadeAdxLoadBalancer(BASEV2, HasId, HasTenant):
@@ -117,27 +120,34 @@ class BrocadeAdxLoadBalancer(BASEV2, HasId, HasTenant):
     name = sa.Column(sa.String(36))
     version = sa.Column(sa.String(36))
     management_ip = sa.Column(sa.String(36))
-    nova_instance_id=sa.Column(sa.String(36),unique=True)
+    nova_instance_id = sa.Column(sa.String(36), unique=True)
     user = sa.Column(sa.String(36), nullable=False)
     password = sa.Column(sa.String(36), nullable=False)
-    status=sa.Column(sa.String(36))
-    ha_config_type=sa.Column(sa.Enum("PRIMARY","SECONDARY",name="ha_config_type"))
-    communication_type=sa.Column(sa.Enum("HTTP","HTTPS",name="communication_type"))
+    status = sa.Column(sa.String(36))
+    ha_config_type = sa.Column(sa.Enum("PRIMARY",
+                                       "SECONDARY",
+                                       name="ha_config_type"))
+    communication_type = sa.Column(sa.Enum("HTTP",
+                                           "HTTPS",
+                                           name="communication_type"))
     status_description = sa.Column(sa.String(36), nullable=True)
     created_time = sa.Column(sa.DateTime)
     last_updated_time = sa.Column(sa.DateTime)
-    deleted_at=sa.Column(sa.DateTime)
+    deleted_at = sa.Column(sa.DateTime)
     ports = orm.relationship(
         "BrocadeAdxPort", backref="brocadeadxloadbalancers",
         cascade="all, delete-orphan"
     )
-    adx_group_id=sa.Column(sa.String(36),sa.ForeignKey("brocadeadxgroups.id"))
+    adx_group_id = sa.Column(sa.String(36),
+                             sa.ForeignKey("brocadeadxgroups.id"))
 
-class BrocadeAdxPort(BASEV2,HasId):
+
+class BrocadeAdxPort(BASEV2, HasId):
 
     subnet_id = sa.Column(sa.String(36), nullable=False)
-    adx_lb_id = sa.Column(sa.String(36), sa.ForeignKey("brocadeadxloadbalancers.id"), nullable=False)
-    mac=sa.Column(sa.String(36))
-    ip_address=sa.Column(sa.String(36))
-    network_id=sa.Column(sa.String(36))
-
+    adx_lb_id = sa.Column(sa.String(36),
+                          sa.ForeignKey("brocadeadxloadbalancers.id"),
+                          nullable=False)
+    mac = sa.Column(sa.String(36))
+    ip_address = sa.Column(sa.String(36))
+    network_id = sa.Column(sa.String(36))

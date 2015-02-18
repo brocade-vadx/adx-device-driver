@@ -29,9 +29,11 @@ from suds.plugin import MessagePlugin
 
 LOG = logging.getLogger(__name__)
 
+
 class RemoveEmptyTags(MessagePlugin):
     def marshalled(self, context):
         context.envelope[1].prune()
+
 
 class ClientCache:
 
@@ -181,11 +183,10 @@ class AdxService:
         client.set_options(soapheaders=requestHeader)
         return client
 
-
     def createNetServiceClient(self):
         def soapHeader():
             requestHeader = suds_element.Element('RequestHeader',
-                    ns=AdxService.ns0)
+                                                 ns=AdxService.ns0)
             context = suds_element.Element('context').setText('default')
             requestHeader.append(context)
             return requestHeader

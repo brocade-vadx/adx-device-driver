@@ -41,45 +41,42 @@ class AdxLoadBalancerManager(object):
     def __init__(self, device_driver):
         self.device_driver = device_driver
         self.devices_file_name = cfg.CONF.brocade.devices_file_name
-        config=ConfigParser.ConfigParser()
+        config = ConfigParser.ConfigParser()
         config.read(self.devices_file_name)
-        self.dburl=config.get('DEFAULT','db_url')
-        if self.dburl==None:
-            LOG.error("Database url not configured for brocade device inventory")
+        self.dburl = config.get('DEFAULT', 'db_url')
+        if self.dburl is None:
+            LOG.error("Database url not configured for device inventory")
             raise adx_exception.StartupError(msg="DbUrl Not configured")
-        self.context=Context()
+        self.context = Context()
         configure_db(self.dburl)
-        self.db_plugin= AdxLoadBalancerDbPlugin()
+        self.db_plugin = AdxLoadBalancerDbPlugin()
 
-    def get_device(self,subnet_id):
-        filters={'BrocadeAdxPort.subnet_id':subnet_id}
-        adx= self.db_plugin.get_adxloadbalancer(self.context,filters)
-        if len(adx)==0:
-            filters={'BrocadeAdxPort.subnet_id':'ALL'}
-            adx=self.db_plugin.get_adxloadbalancer(self.context,filters)
+    def get_device(self, subnet_id):
+        filters = {'BrocadeAdxPort.subnet_id': subnet_id}
+        adx = self.db_plugin.get_adxloadbalancer(self.context, filters)
+        if len(adx) == 0:
+            filters = {'BrocadeAdxPort.subnet_id': 'ALL'}
+            adx = self.db_plugin.get_adxloadbalancer(self.context, filters)
         return adx
 
-    def add_device(self,device_dict):
-        adx=self.db_plugin.create_adxloadbalancer(device_dict,self.context)
+    def add_device(self, device_dict):
+        adx = self.db_plugin.create_adxloadbalancer(device_dict, self.context)
         return adx
 
-    def add_port(self,port_dict,adx_lb_id):
-        port=self.db_plugin.create_port(port_dict,self.context,adx_lb_id)
+    def add_port(self, port_dict, adx_lb_id):
+        port = self.db_plugin.create_port(port_dict, self.context, adx_lb_id)
         return port
 
-
-    def delete_port(self,port_id):
-        port= self.db_plugin.delete_port(port_id,self.context)
+    def delete_port(self, port_id):
+        port = self.db_plugin.delete_port(port_id, self.context)
         return port
 
-
-    def update_device(self,device_dict):
-        device=self.db_plugin.update_adxloadbalancer(device_dict, self.context)
+    def update_device(self, device_dict):
+        device = self.db_plugin.update_adxloadbalancer(device_dict,
+                                                       self.context)
         adx_service.ClientCache.delete_adx_service_client(device)
         adx_service.ClientCache.add_adx_service_client(device)
 
-
-    def delete_device(self,device_id):
-        device=self.db_plugin.delete_adxloadbalancer(device_id,self.context)
+    def delete_device(self, device_id):
+        device = self.db_plugin.delete_adxloadbalancer(device_id, self.context)
         adx_service.ClientCache.delete_adx_service_client(device)
-
