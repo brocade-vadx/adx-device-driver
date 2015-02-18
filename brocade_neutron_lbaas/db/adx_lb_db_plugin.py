@@ -19,8 +19,6 @@ import json
 import uuid
 from sqlalchemy.orm import exc
 
-from neutron.db import common_db_mixin as base_db
-
 from brocade_neutron_lbaas.db import db_utils as utils
 from brocade_neutron_lbaas.db.brocade_db_base import BrocadeAdxLoadBalancer
 from brocade_neutron_lbaas.db.brocade_db_base import BrocadeAdxPort
@@ -33,7 +31,7 @@ def _format_date_time(date):
         return None
 
 
-class AdxLoadBalancerDbPlugin(base_db.CommonDbMixin):
+class AdxLoadBalancerDbPlugin():
     def _make_device_dict(self, device, fields=None):
         res = {'id': device['id'],
                'tenant_id': device['tenant_id'],
@@ -57,7 +55,7 @@ class AdxLoadBalancerDbPlugin(base_db.CommonDbMixin):
             for port in port_objs:
                 ports.append(self._make_port_dict(port))
         res['ports'] = ports
-        return self._fields(res, fields)
+        return utils._fields(res, fields)
 
     def _make_port_dict(self, port, fields=None):
         res = {'id': port['id'],
@@ -66,8 +64,9 @@ class AdxLoadBalancerDbPlugin(base_db.CommonDbMixin):
                'mac': port['mac'],
                'ip_address': port['ip_address'],
                'network_id': port['network_id']}
-        return self._fields(res, fields)
+        return utils._fields(res, fields)
 
+    """
     def _get_resource(self, context, model, id):
         resource = None
         try:
@@ -77,6 +76,7 @@ class AdxLoadBalancerDbPlugin(base_db.CommonDbMixin):
                                   BrocadeAdxPort)):
                 raise Exception("Entity not found")
         return resource
+    """
 
     def set_obj_attr(self, obj, obj_dict):
         for k, v in obj_dict.iteritems():
@@ -108,7 +108,7 @@ class AdxLoadBalancerDbPlugin(base_db.CommonDbMixin):
 
     def delete_port(self, port_id, context):
         with context.session.begin(subtransactions=True):
-            port_db = self._get_resource(context,
+            port_db = utils._get_resource(context,
                                          BrocadeAdxPort,
                                          port_id)
             context.session.delete(port_db)
@@ -117,7 +117,7 @@ class AdxLoadBalancerDbPlugin(base_db.CommonDbMixin):
 
     def update_adxloadbalancer(self, d, context):
         with context.session.begin(subtransactions=True):
-            device_db = self._get_resource(context,
+            device_db = utils._get_resource(context,
                                            BrocadeAdxLoadBalancer,
                                            d['id'])
             self.set_obj_attr(device_db, d)
@@ -129,7 +129,7 @@ class AdxLoadBalancerDbPlugin(base_db.CommonDbMixin):
     def delete_adxloadbalancer(self, device_id, context):
         device_info = None
         with context.session.begin(subtransactions=True):
-            device_db = self._get_resource(context,
+            device_db = utils._get_resource(context,
                                            BrocadeAdxLoadBalancer,
                                            device_id)
             device_info = self._make_device_dict(device_db)
@@ -138,7 +138,7 @@ class AdxLoadBalancerDbPlugin(base_db.CommonDbMixin):
         return device_info
 
     def get_port(self, context, filters=None, fields=None):
-        return self._get_collection(context,
+        return utils._get_collection(context,
                                     BrocadeAdxPort,
                                     self._make_port_dict,
                                     filters=filters,
