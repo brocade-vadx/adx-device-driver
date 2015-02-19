@@ -45,9 +45,9 @@ class BrocadeAdxDeviceDriverV1():
     def _get_health_monitors(self, pool_id):
         pool = self.plugin.get_pool(get_admin_context(), pool_id)
         all_hms = ([self.plugin.get_health_monitor(get_admin_context(),
-                                                monitor_id)
-                for monitor_id in pool['health_monitors']])
-        
+                                                   monitor_id)
+                   for monitor_id in pool['health_monitors']])
+
         # skip the PING health monitor
         hms = []
         for hm in all_hms:
@@ -129,7 +129,6 @@ class BrocadeAdxDeviceDriverV1():
             for member in members:
                 impl.bind_member_to_vip(member, obj)
         self._save_config(device)
-
 
     @log.log
     def delete_vip(self, obj):

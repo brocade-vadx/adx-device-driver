@@ -153,23 +153,29 @@ def main(argv=sys.argv[1:]):
     parser = argparse.ArgumentParser(description='Command Line Arguments '
                                                  'for Device Inventory Client')
     subparsers = parser.add_subparsers(description='Sub Commands',
-                                  help='Sub Commands')
+                                       help='Sub Commands')
 
-    device_parser_create = subparsers.add_parser('create-device',
-                                help='Create load balancer device')
-    device_parser_delete = subparsers.add_parser('delete-device',
-                                help='Delete load balancer device')
-    device_parser_update = subparsers.add_parser('update-device',
-                                help='Update load balancer device')
-    device_parser_list = subparsers.add_parser('list-devices',
-                                help='List all load balancer devices')
+    device_parser_create = \
+        subparsers.add_parser('create-device',
+                              help='Create load balancer device')
+    device_parser_delete = \
+        subparsers.add_parser('delete-device',
+                              help='Delete load balancer device')
+    device_parser_update = \
+        subparsers.add_parser('update-device',
+                              help='Update load balancer device')
+    device_parser_list = \
+        subparsers.add_parser('list-devices',
+                              help='List all load balancer devices')
 
-    port_parser_create = subparsers.add_parser('add-port',
-                                help='Add port to load balancer device')
-    port_parser_delete = subparsers.add_parser('delete-port',
-                                help='Delete port from load balancer device')
+    port_parser_create = \
+        subparsers.add_parser('add-port',
+                              help='Add port to load balancer device')
+    port_parser_delete = \
+        subparsers.add_parser('delete-port',
+                              help='Delete port from load balancer device')
     port_parser_list = subparsers.add_parser('list-ports',
-                                     help='List all ports')
+                                             help='List all ports')
 
     device_parser_create.add_argument('--management-ip',
                                       dest='management_ip',

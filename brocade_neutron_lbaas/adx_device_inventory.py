@@ -49,7 +49,6 @@ class AdxLoadBalancerManager(object):
         if self.dburl is None:
             LOG.error("Database url not configured for device inventory")
             raise adx_exception.StartupError(msg="DbUrl Not configured")
-        #self.context = Context()
         self.context = get_admin_context()
         configure_db(self.dburl)
         self.db_plugin = AdxLoadBalancerDbPlugin()

@@ -11,7 +11,7 @@ setup(name='brocade_neutron_lbaas',
 
       # packages=find_packages()
       packages=['brocade_neutron_lbaas',
-                  'brocade_neutron_lbaas.db'],
+                'brocade_neutron_lbaas.db'],
 
       scripts=["scripts/brocade_inventory_client"],
 
