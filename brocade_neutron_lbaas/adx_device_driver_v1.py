@@ -44,9 +44,20 @@ class BrocadeAdxDeviceDriverV1():
 
     def _get_health_monitors(self, pool_id):
         pool = self.plugin.get_pool(get_admin_context(), pool_id)
-        return ([self.plugin.get_health_monitor(get_admin_context(),
+        all_hms = ([self.plugin.get_health_monitor(get_admin_context(),
                                                 monitor_id)
                 for monitor_id in pool['health_monitors']])
+        
+        # skip the PING health monitor
+        hms = []
+        for hm in all_hms:
+            if hm["type"] != "PING":
+                hms.append(hm)
+        return hms
+
+    def _save_config(self, device):
+        impl = driver_impl.BrocadeAdxDeviceDriverImpl(self.plugin, device)
+        impl.write_mem()
 
     def _get_device(self, subnet_id):
         devices = self.device_inv_mgr.get_device(subnet_id)
@@ -89,6 +100,7 @@ class BrocadeAdxDeviceDriverV1():
         pool = self._get_pool(pool_id)
         lb_method = pool['lb_method']
         impl.set_predictor_on_virtual_server(obj, lb_method)
+        self._save_config(device)
 
     @log.log
     def update_vip(self, obj, old_obj):
@@ -116,12 +128,15 @@ class BrocadeAdxDeviceDriverV1():
             members = self._get_pool_members(new_pool_id)
             for member in members:
                 impl.bind_member_to_vip(member, obj)
+        self._save_config(device)
+
 
     @log.log
     def delete_vip(self, obj):
         device = self._fetch_device(obj['pool_id'])
         impl = driver_impl.BrocadeAdxDeviceDriverImpl(self.plugin, device)
         impl.delete_vip(obj)
+        self._save_config(device)
 
     @log.log
     def create_pool(self, obj):
@@ -145,6 +160,7 @@ class BrocadeAdxDeviceDriverV1():
         if vip_id and new_lb_method:
             vip = self._get_vip(vip_id)
             impl.set_predictor_on_virtual_server(vip, new_lb_method)
+        self._save_config(device)
 
     @log.log
     def delete_pool(self, obj):
@@ -165,6 +181,7 @@ class BrocadeAdxDeviceDriverV1():
         hms = self._get_health_monitors(pool_id)
         for hm in hms:
             impl.delete_health_monitor(hm)
+        self._save_config(device)
 
     @log.log
     def create_member(self, obj):
@@ -185,6 +202,7 @@ class BrocadeAdxDeviceDriverV1():
         hms = self._get_health_monitors(pool_id)
         for hm in hms:
             impl.bind_monitor_to_member(hm, obj)
+        self._save_config(device)
 
     @log.log
     def update_member(self, obj, old_obj):
@@ -221,48 +239,72 @@ class BrocadeAdxDeviceDriverV1():
             if new_vip_id:
                 new_vip = self._get_vip(new_vip_id)
                 impl.bind_member_to_vip(obj, new_vip)
+        self._save_config(device)
 
     @log.log
     def delete_member(self, obj):
         device = self._fetch_device(obj['pool_id'])
         impl = driver_impl.BrocadeAdxDeviceDriverImpl(self.plugin, device)
         impl.delete_member(obj)
+        self._save_config(device)
 
     @log.log
     def create_health_monitor(self, obj, pool_id):
         device = self._fetch_device(pool_id)
         impl = driver_impl.BrocadeAdxDeviceDriverImpl(self.plugin, device)
-        impl.create_health_monitor(obj, pool_id)
+
+        # Limit to 1 Health Monitor per Pool
+        healthmonitors = self._get_health_monitors(pool_id)
+        if len(healthmonitors) > 1:
+            m = _('Only one health monitor can be associated with the pool')
+            LOG.error(m)
+            raise adx_exception.UnsupportedFeature(msg=m)
 
         monitor_type = obj['type']
-        if monitor_type in ["HTTP",
-                            "HTTPS",
-                            "TCP"]:
+        if monitor_type in ["HTTP", "HTTPS", "TCP"]:
+            impl.create_health_monitor(obj)
             members = self._get_pool_members(pool_id)
             for member in members:
                 impl.bind_monitor_to_member(obj, member)
+        elif monitor_type == "PING":
+            impl.set_l2l3l4_health_check(obj)
+
+        self._save_config(device)
 
     @log.log
     def delete_health_monitor(self, obj, pool_id):
         device = self._fetch_device(pool_id)
         impl = driver_impl.BrocadeAdxDeviceDriverImpl(self.plugin, device)
 
-        # Retrieve the members of the pool from pool_id
-        # Unbind health monitor from the members
-        members = self._get_pool_members(pool_id)
-        for member in members:
-            impl.unbind_monitor_from_member(obj, member)
-
-        impl.delete_health_monitor(obj)
+        monitor_type = obj['type']
+        if monitor_type in ["HTTP", "HTTPS", "TCP"]:
+            # Retrieve the members of the pool from pool_id
+            # Unbind health monitor from the members
+            members = self._get_pool_members(pool_id)
+            for member in members:
+                impl.unbind_monitor_from_member(obj, member)
+            impl.delete_health_monitor(obj)
+            self._save_config(device)
+        elif monitor_type == "PING":
+            # Nothing to delete for PING health monitor
+            m = _('Delete of PING health monitor not supported')
+            LOG.error(m)
 
     @log.log
     def update_health_monitor(self, obj, old_obj, pool_id):
         device = self._fetch_device(pool_id)
         impl = driver_impl.BrocadeAdxDeviceDriverImpl(self.plugin, device)
-        impl.update_health_monitor(obj, old_obj)
+        monitor_type = obj['type']
+        if monitor_type in ["HTTP", "HTTPS", "TCP"]:
+            impl.update_health_monitor(obj, old_obj)
+        elif monitor_type == "PING":
+            impl.set_l2l3l4_health_check(obj, old_obj)
+
+        self._save_config(device)
 
     @log.log
     def get_pool_stats(self, pool_id):
         device = self._fetch_device(pool_id)
         impl = driver_impl.BrocadeAdxDeviceDriverImpl(self.plugin, device)
-        return impl.get_pool_stats(pool_id)
+        members = self._get_pool_members(pool_id)
+        return impl.get_pool_stats(pool_id, members)

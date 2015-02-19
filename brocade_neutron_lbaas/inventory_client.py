@@ -89,26 +89,26 @@ def delete_port(port_args):
 
 def update_device(device_args):
     device = {"id": device_args['id']}
-    if "user" in device_args:
+    if device_args["user"]:
         device["user"] = device_args.get("user")
-    if "password" in device_args:
+    if device_args["password"]:
         device["password"] = device_args.get("password")
-    if "communication_type" in device_args:
+    if device_args["communication_type"]:
         device["communication_type"] = \
             device_args.get("communication_type", "HTTP")
-    if "name" in device_args:
+    if device_args["name"]:
         device["name"] = device_args.get("name")
-    if "version" in device_args:
+    if device_args["version"]:
         device["version"] = device_args.get("version")
-    if "status" in device_args:
+    if device_args["status"]:
         device["status"] = device_args.get("status")
-    if "status_description" in device_args:
+    if device_args["status_description"]:
         device["status_description"] = device_args.get("status_description")
-    if "ha_config_type" in device_args:
+    if device_args["ha_config_type"]:
         device["ha_config_type"] = device_args.get("ha_config_type")
-    if "tenant_id" in device_args:
+    if device_args["tenant_id"]:
         device["tenant_id"] = device_args.get("tenant_id")
-    if "nova_instance_id" in device_args:
+    if device_args["nova_instance_id"]:
         device["nova_instance_id"] = device_args.get("nova_instance_id")
     print json.dumps(device, indent=4)
     try:
@@ -151,27 +151,27 @@ def main(argv=sys.argv[1:]):
     plugin = AdxLoadBalancerDbPlugin()
 
     parser = argparse.ArgumentParser(description='Command Line Arguments '
-                                                 'of Device Inventory Client')
+                                                 'for Device Inventory Client')
     subparsers = parser.add_subparsers(description='Sub Commands',
-                                       help='Sub Commands')
+                                  help='Sub Commands')
 
     device_parser_create = subparsers.add_parser('create-device',
-                                                 help='Create Device')
+                                help='Create load balancer device')
     device_parser_delete = subparsers.add_parser('delete-device',
-                                                 help='Delete Device')
+                                help='Delete load balancer device')
     device_parser_update = subparsers.add_parser('update-device',
-                                                 help='Update Device')
+                                help='Update load balancer device')
     device_parser_list = subparsers.add_parser('list-devices',
-                                               help='List Devices')
+                                help='List all load balancer devices')
 
     port_parser_create = subparsers.add_parser('add-port',
-                                               help='Add Port')
+                                help='Add port to load balancer device')
     port_parser_delete = subparsers.add_parser('delete-port',
-                                               help='Delete Port')
+                                help='Delete port from load balancer device')
     port_parser_list = subparsers.add_parser('list-ports',
-                                             help='List Ports')
+                                     help='List all ports')
 
-    device_parser_create.add_argument('--management_ip',
+    device_parser_create.add_argument('--management-ip',
                                       dest='management_ip',
                                       required=True,
                                       help='Management IP Address '
@@ -181,7 +181,7 @@ def main(argv=sys.argv[1:]):
                                       help='User Name')
     device_parser_create.add_argument('--password', dest='password',
                                       required=True, help='Password')
-    device_parser_create.add_argument('--communication_type',
+    device_parser_create.add_argument('--communication-type',
                                       dest='communication_type',
                                       required=False, default="HTTP",
                                       help='HTTP/HTTPS. Default: HTTP')
@@ -190,11 +190,11 @@ def main(argv=sys.argv[1:]):
     device_parser_create.add_argument('--version', dest='version',
                                       required=False,
                                       help='running image version of the adx')
-    device_parser_create.add_argument('--tenant_id', dest='tenant_id',
+    device_parser_create.add_argument('--tenant-id', dest='tenant_id',
                                       required=False,
                                       help='id of the tenant owning '
                                            'the device')
-    device_parser_create.add_argument('--nova_instance_id',
+    device_parser_create.add_argument('--nova-instance-id',
                                       dest='nova_instance_id',
                                       required=False,
                                       help='nova instance id of the adx '
@@ -205,32 +205,32 @@ def main(argv=sys.argv[1:]):
                                       required=False,
                                       help='active, stopped, paused, '
                                            'suspended, error, inactive')
-    device_parser_create.add_argument('--status_description',
+    device_parser_create.add_argument('--status-description',
                                       dest='status_description',
                                       required=False,
                                       help='status description')
-    device_parser_create.add_argument('--ha_config_type',
+    device_parser_create.add_argument('--ha-config-type',
                                       dest='ha_config_type',
                                       default="PRIMARY",
                                       required=False,
                                       help='PRIMARY, SECONDARY')
     device_parser_create.set_defaults(func=create_device)
 
-    port_parser_create.add_argument('--subnet_id',
+    port_parser_create.add_argument('--subnet-id',
                                     dest='subnet_id',
                                     required=True,
                                     help='id of the subnet or '
                                          'ALL for default device')
-    port_parser_create.add_argument('--adx_lb_id',
+    port_parser_create.add_argument('--adx-lb-id',
                                     dest='adx_lb_id',
                                     required=True,
                                     help='id of the load balancer to '
                                          'which the port belongs to')
-    port_parser_create.add_argument('--ip_address',
+    port_parser_create.add_argument('--ip-address',
                                     dest='ip_address',
                                     required=False,
                                     help="IP address of the port")
-    port_parser_create.add_argument('--network_id',
+    port_parser_create.add_argument('--network-id',
                                     dest='network_id',
                                     required=False,
                                     help='The network id to which the '
@@ -253,7 +253,7 @@ def main(argv=sys.argv[1:]):
                                       dest='password',
                                       required=False,
                                       help='Password')
-    device_parser_update.add_argument('--communication_type',
+    device_parser_update.add_argument('--communication-type',
                                       dest='communication_type',
                                       required=False,
                                       help='HTTP/HTTPS')
@@ -265,11 +265,11 @@ def main(argv=sys.argv[1:]):
                                       dest='version',
                                       required=False,
                                       help='running image version of the adx')
-    device_parser_update.add_argument('--tenant_id', dest='tenant_id',
+    device_parser_update.add_argument('--tenant-id', dest='tenant_id',
                                       required=False,
                                       help='id of the tenant owning '
                                            'the device')
-    device_parser_update.add_argument('--nova_instance_id',
+    device_parser_update.add_argument('--nova-instance-id',
                                       dest='nova_instance_id',
                                       required=False,
                                       help='nova instance id of the adx '
@@ -278,11 +278,11 @@ def main(argv=sys.argv[1:]):
                                       required=False,
                                       help='active, stopped, paused, '
                                            'suspended, error, inactive')
-    device_parser_update.add_argument('--status_description',
+    device_parser_update.add_argument('--status-description',
                                       dest='status_description',
                                       required=False,
                                       help='status description')
-    device_parser_update.add_argument('--ha_config_type',
+    device_parser_update.add_argument('--ha-config-type',
                                       dest='ha_config_type',
                                       required=False,
                                       help='Primary, Secondary')

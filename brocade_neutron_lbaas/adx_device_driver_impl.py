@@ -21,7 +21,6 @@ import suds as suds
 import time
 import functools
 
-from neutron.context import get_admin_context
 import adx_exception
 import adx_service
 
@@ -70,21 +69,6 @@ class BrocadeAdxDeviceDriverImpl():
 
         self.net_factory = service_clients[2].factory
         self.net_service = service_clients[2].service
-
-    def _get_pool(self, pool_id):
-        return self.plugin.get_pool(get_admin_context(), pool_id)
-
-    def _get_pool_members(self, pool_id):
-        pool = self._get_pool(pool_id)
-        ctx = get_admin_context()
-        return ([self.plugin.get_member(ctx, member_id)
-                for member_id in pool['members']])
-
-    def _get_health_monitors(self, pool_id):
-        ctx = get_admin_context()
-        pool = self.plugin.get_pool(ctx, pool_id)
-        return ([self.plugin.get_health_monitor(ctx, monitor_id)
-                for monitor_id in pool['health_monitors']])
 
     def _adx_server(self, address, name=None):
         server = self.slb_factory.create("Server")
@@ -526,12 +510,21 @@ class BrocadeAdxDeviceDriverImpl():
             if delay < 5 or delay > 120:
                 raise adx_exception.UnsupportedOption(value=delay,
                                                       name="delay")
+        elif monitor_type == "PING":
+            if delay < 1 or delay > 10:
+                raise adx_exception.UnsupportedOption(value=delay,
+                                                      name="delay")
 
     @log
-    def _validate_max_retries(self, max_retries):
-        if max_retries < 1 or max_retries > 5:
-            raise adx_exception.UnsupportedOption(value=max_retries,
-                                                  name="max_retries")
+    def _validate_max_retries(self, monitor_type, max_retries):
+        if monitor_type == "PING":
+            if max_retries < 2 or max_retries > 10:
+                raise adx_exception.UnsupportedOption(value=max_retries,
+                                                      name="max_retries")
+        else:
+            if max_retries < 1 or max_retries > 5:
+                raise adx_exception.UnsupportedOption(value=max_retries,
+                                                      name="max_retries")
 
     @log
     def _create_update_port_policy(self, healthmonitor, is_create=True):
@@ -541,7 +534,7 @@ class BrocadeAdxDeviceDriverImpl():
         delay = healthmonitor['delay']
         self._validate_delay(monitor_type, delay)
         max_retries = healthmonitor['max_retries']
-        self._validate_max_retries(max_retries)
+        self._validate_max_retries(monitor_type, max_retries)
 
         if monitor_type in ["HTTP",
                             "HTTPS",
@@ -653,23 +646,29 @@ class BrocadeAdxDeviceDriverImpl():
                 raise adx_exception.ConfigError(msg=e.message)
 
     @log
-    def create_health_monitor(self, healthmonitor, pool_id):
+    def set_l2l3l4_health_check(self, new_hm, old_hm=None):
+        try:
+            delay = new_hm['delay']
+            self._validate_delay("PING", delay)
+            max_retries = new_hm['max_retries']
+            self._validate_max_retries("PING", max_retries)
 
-        # Limit to 1 Health Monitor per Pool
-        healthmonitors = self._get_health_monitors(pool_id)
-        if len(healthmonitors) > 1:
-            m = _('Only one health monitor can be associated with the pool')
-            LOG.error(m)
-            raise adx_exception.UnsupportedFeature(msg=m)
+            l2l3l4_health_check = (self.slb_factory
+                                   .create('L2L3L4HealthCheck'))
+            l2l3l4_health_check.pingInterval = delay
+            l2l3l4_health_check.pingRetries = max_retries
+            self.slb_service.setL2L3L4HealthCheck(l2l3l4_health_check)
+        except suds.WebFault as e:
+            raise adx_exception.ConfigError(msg=e.message)
 
+    @log
+    def create_health_monitor(self, healthmonitor):
         name = healthmonitor['id']
         monitor_type = healthmonitor['type']
 
         # Create Port Policy
         # if the Monitor Type is TCP / HTTP / HTTPS
-        if monitor_type in ["HTTP",
-                            "HTTPS",
-                            "TCP"]:
+        if monitor_type in ["HTTP", "HTTPS", "TCP"]:
             if not self._does_port_policy_exist(healthmonitor):
                 self._create_update_port_policy(healthmonitor)
             else:
@@ -685,9 +684,7 @@ class BrocadeAdxDeviceDriverImpl():
         name = healthmonitor['id']
         monitor_type = healthmonitor['type']
 
-        if monitor_type in ["HTTP",
-                            "HTTPS",
-                            "TCP"]:
+        if monitor_type in ["HTTP", "HTTPS", "TCP"]:
             if not self._does_port_policy_exist(healthmonitor):
                 LOG.debug(_('Health Monitor %s does not '
                           'exist on the device'), name)
@@ -861,18 +858,17 @@ class BrocadeAdxDeviceDriverImpl():
             raise adx_exception.ConfigError(msg=e.message)
 
     @log
-    def get_pool_stats(self, pool_id):
+    def get_pool_stats(self, pool_id, members):
         bytesIn = 0
         bytesOut = 0
         activeConnections = 0
         totalConnections = 0
 
-        poolMembers = self._get_pool_members(pool_id)
-        for poolMember in poolMembers:
+        for m in members:
             try:
-                rsIpAddress = poolMember['address']
-                rsName = poolMember['address']
-                rsPort = poolMember['protocol_port']
+                rsIpAddress = m['address']
+                rsName = m['address']
+                rsPort = m['protocol_port']
                 rsServerPort = self._adx_server_port(rsIpAddress,
                                                      rsPort, rsName)
                 reply = (self.slb_service
