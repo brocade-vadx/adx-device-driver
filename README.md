@@ -11,7 +11,7 @@ Install Instructions
 
 - Download and Install the Brocade Neutron LBaaS Device Driver Python Package
 
-    - From a temporary location, run "https://github.com/brocade-vadx/adx-device-driver.git"
+    - From a temporary location, run "git clone https://github.com/brocade-vadx/adx-device-driver.git"
 
     - Change directory ("cd adx-device-driver")
 
