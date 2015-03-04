@@ -20,10 +20,9 @@ import datetime
 import uuid
 from sqlalchemy.orm import exc
 
-from neutron.db import common_db_mixin
-
 from brocade_neutron_lbaas.db.brocade_db_base import BrocadeAdxLoadBalancer
 from brocade_neutron_lbaas.db.brocade_db_base import BrocadeAdxPort
+from brocade_neutron_lbaas.db import db_utils as utils
 
 
 def _format_date_time(date):
@@ -33,7 +32,7 @@ def _format_date_time(date):
         return None
 
 
-class AdxLoadBalancerDbPlugin(common_db_mixin.CommonDbMixin):
+class AdxLoadBalancerDbPlugin():
     def _make_device_dict(self, device, fields=None):
         res = {'id': device['id'],
                'tenant_id': device['tenant_id'],
@@ -53,7 +52,7 @@ class AdxLoadBalancerDbPlugin(common_db_mixin.CommonDbMixin):
                'status_description': device.get('status_description')}
 
         res['ports'] = [self._make_port_dict(port) for port in device['ports']]
-        return self._fields(res, fields)
+        return utils._fields(res, fields)
 
     def _make_port_dict(self, port, fields=None):
         res = {'id': port['id'],
@@ -62,17 +61,7 @@ class AdxLoadBalancerDbPlugin(common_db_mixin.CommonDbMixin):
                'mac': port['mac'],
                'ip_address': port['ip_address'],
                'network_id': port['network_id']}
-        return self._fields(res, fields)
-
-    def _get_resource(self, context, model, id):
-        resource = None
-        try:
-            resource = self._get_by_id(context, model, id)
-        except exc.NoResultFound:
-            if issubclass(model, (BrocadeAdxLoadBalancer,
-                                  BrocadeAdxPort)):
-                raise Exception("%s not found" % id)
-        return resource
+        return utils._fields(res, fields)
 
     def set_obj_attr(self, obj, obj_dict):
         for k, v in obj_dict.iteritems():
@@ -105,7 +94,7 @@ class AdxLoadBalancerDbPlugin(common_db_mixin.CommonDbMixin):
 
     def delete_port(self, port_id, context):
         with context.session.begin(subtransactions=True):
-            port_db = self._get_resource(context,
+            port_db = utils._get_resource(context,
                                          BrocadeAdxPort,
                                          port_id)
             context.session.delete(port_db)
@@ -116,7 +105,7 @@ class AdxLoadBalancerDbPlugin(common_db_mixin.CommonDbMixin):
         d["last_updated_time"] = datetime.datetime.now()
 
         with context.session.begin(subtransactions=True):
-            device_db = self._get_resource(context,
+            device_db = utils._get_resource(context,
                                            BrocadeAdxLoadBalancer,
                                            d['id'])
             self.set_obj_attr(device_db, d)
@@ -128,7 +117,7 @@ class AdxLoadBalancerDbPlugin(common_db_mixin.CommonDbMixin):
     def delete_adxloadbalancer(self, device_id, context):
         device_info = None
         with context.session.begin(subtransactions=True):
-            device_db = self._get_resource(context,
+            device_db = utils._get_resource(context,
                                            BrocadeAdxLoadBalancer,
                                            device_id)
             device_info = self._make_device_dict(device_db)
@@ -137,14 +126,14 @@ class AdxLoadBalancerDbPlugin(common_db_mixin.CommonDbMixin):
         return device_info
 
     def get_port(self, context, filters=None, fields=None):
-        return self._get_collection(context,
+        return utils._get_collection(context,
                                     BrocadeAdxPort,
                                     self._make_port_dict,
                                     filters=filters,
                                     fields=fields)
 
     def get_adxloadbalancer(self, context, filters=None, fields=None):
-        return self._get_collection(context,
+        return utils._get_collection(context,
                                      BrocadeAdxLoadBalancer,
                                      self._make_device_dict,
                                      filters=filters,

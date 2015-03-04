@@ -24,6 +24,4 @@ class Context:
     def session(self):
         # if self._session is None:
         self._session = get_session(True, False)
-        self.is_admin = True
-        self.tenant_id = None
         return self._session
