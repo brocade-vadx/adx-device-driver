@@ -21,8 +21,6 @@ import json
 import logging
 from oslo.config import cfg
 
-from neutron.context import get_admin_context
-
 import adx_exception
 import adx_service
 from db.db_base import configure_db
@@ -49,7 +47,7 @@ class AdxLoadBalancerManager(object):
         if self.dburl is None:
             LOG.error("Database url not configured for device inventory")
             raise adx_exception.StartupError(msg="DbUrl Not configured")
-        self.context = get_admin_context()
+        self.context = Context()
         configure_db(self.dburl)
         self.db_plugin = AdxLoadBalancerDbPlugin()
 
